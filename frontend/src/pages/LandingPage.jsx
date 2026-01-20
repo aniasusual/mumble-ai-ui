@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import LiquidOrb from '../components/LiquidOrb';
 import MumbleLogo from '../components/MumbleLogo';
 import { miaConfig, appInfo, suggestedQuestions } from '../data/mock';
-import { ArrowRight, Send, Mic, MicOff, Volume2, VolumeX, Check } from 'lucide-react';
+import { ArrowRight, Send, Mic, Volume2, VolumeX, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -27,7 +27,6 @@ const LandingPage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasIntroduced, setHasIntroduced] = useState(false);
   
   // Voice input states
   const [isListening, setIsListening] = useState(false);
@@ -35,6 +34,7 @@ const LandingPage = () => {
   
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
+  const hasIntroducedRef = useRef(false);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -54,7 +54,6 @@ const LandingPage = () => {
         
         setChatInput(transcript);
         
-        // If it's a final result, send the message
         if (event.results[0].isFinal) {
           setIsListening(false);
         }
@@ -101,12 +100,12 @@ const LandingPage = () => {
   }, [isMuted]);
 
   // Send message to Mia and get voice response
-  const sendMessage = useCallback(async (message) => {
+  const sendMessage = useCallback(async (message, isIntro = false) => {
     if (!message.trim() || isChatting) return;
     
     setIsChatting(true);
     setCurrentResponse('');
-    setChatInput(''); // Clear input after sending
+    if (!isIntro) setChatInput('');
     
     try {
       const response = await axios.post(`${API}/chat-voice`, {
@@ -117,31 +116,63 @@ const LandingPage = () => {
       setCurrentResponse(response.data.response);
       setSessionId(response.data.session_id);
       
-      // Play the audio response
       if (response.data.audio) {
         playAudioFromBase64(response.data.audio);
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('Mia is thinking... try again!');
+      if (!isIntro) {
+        toast.error('Mia is thinking... try again!');
+      }
     } finally {
       setIsChatting(false);
     }
   }, [isChatting, sessionId, playAudioFromBase64]);
 
-  // Handle intro on page load
+  // Auto-introduce on first render
   useEffect(() => {
     setIsLoaded(true);
     
-    const introduceTimer = setTimeout(async () => {
-      if (!hasIntroduced && !isMuted) {
-        setHasIntroduced(true);
-        await sendMessage("Introduce yourself briefly");
-      }
-    }, miaConfig.delay);
+    // Only run intro once
+    if (hasIntroducedRef.current) return;
+    hasIntroducedRef.current = true;
     
-    return () => clearTimeout(introduceTimer);
-  }, []); // Only run once on mount
+    const introduceAI = async () => {
+      try {
+        setIsChatting(true);
+        
+        const response = await axios.post(`${API}/chat-voice`, {
+          message: "Introduce yourself briefly as Mia, the AI language tutor for Mumble",
+          session_id: sessionId
+        }, { timeout: 30000 });
+        
+        setCurrentResponse(response.data.response);
+        setSessionId(response.data.session_id);
+        
+        // Play intro audio
+        if (response.data.audio && audioRef.current) {
+          const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
+          audioRef.current.src = audioSrc;
+          audioRef.current.onplay = () => setIsSpeaking(true);
+          audioRef.current.onended = () => setIsSpeaking(false);
+          audioRef.current.onerror = () => setIsSpeaking(false);
+          
+          audioRef.current.play().catch(e => {
+            console.log('Auto-play blocked, user interaction needed:', e);
+          });
+        }
+      } catch (error) {
+        console.error('Intro error:', error);
+      } finally {
+        setIsChatting(false);
+      }
+    };
+    
+    // Small delay for page to render
+    const timer = setTimeout(introduceAI, miaConfig.delay);
+    
+    return () => clearTimeout(timer);
+  }, [sessionId]);
 
   // Toggle mute
   const toggleMute = () => {
@@ -163,7 +194,6 @@ const LandingPage = () => {
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
-      // Stop any playing audio first
       if (audioRef.current && !audioRef.current.paused) {
         audioRef.current.pause();
         setIsSpeaking(false);
@@ -275,7 +305,7 @@ const LandingPage = () => {
           <LiquidOrb isSpeaking={isSpeaking || isListening} />
         </div>
 
-        {/* Response Display - Shows what Mia is saying or listening indicator */}
+        {/* Response Display */}
         <div className="text-center max-w-md mx-auto mb-6 min-h-[60px]">
           {isListening ? (
             <p 
@@ -291,6 +321,12 @@ const LandingPage = () => {
             >
               "{currentResponse}"
             </p>
+          ) : isChatting ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
           ) : (
             <>
               <h1 
