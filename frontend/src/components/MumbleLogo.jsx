@@ -1,97 +1,48 @@
 import React from 'react';
 
-// Sound wave logo - clean, minimal, represents voice/speech
+// Sound wave bars forming an "M" shape
 const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating = false }) => {
+  // Bar heights form an M pattern: tall, short, tall (middle peak), short, tall
+  const bars = [
+    { x: 4, height: 22, y: 9 },    // Left tall
+    { x: 10, height: 12, y: 14 },   // Left short (valley)
+    { x: 16, height: 20, y: 10 },   // Middle tall (center peak)
+    { x: 22, height: 12, y: 14 },   // Right short (valley)
+    { x: 28, height: 22, y: 9 },    // Right tall
+  ];
+
   return (
     <svg 
       width={size} 
       height={size} 
-      viewBox="0 0 40 40" 
+      viewBox="0 0 36 40" 
       className={className}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Sound wave bars - 5 bars creating a wave pattern */}
-      {/* Bar 1 - left */}
-      <rect
-        x="6"
-        y="16"
-        width="4"
-        height="8"
-        rx="2"
-        fill={color}
-        opacity={isAnimating ? 0.9 : 0.6}
-        style={{
-          transform: isAnimating ? 'scaleY(1.3)' : 'scaleY(1)',
-          transformOrigin: 'center',
-          transition: 'all 0.3s ease',
-        }}
-      />
-      
-      {/* Bar 2 */}
-      <rect
-        x="12"
-        y="12"
-        width="4"
-        height="16"
-        rx="2"
-        fill={color}
-        opacity={isAnimating ? 1 : 0.75}
-        style={{
-          transform: isAnimating ? 'scaleY(1.2)' : 'scaleY(1)',
-          transformOrigin: 'center',
-          transition: 'all 0.3s ease 0.05s',
-        }}
-      />
-      
-      {/* Bar 3 - center, tallest */}
-      <rect
-        x="18"
-        y="8"
-        width="4"
-        height="24"
-        rx="2"
-        fill={isAnimating ? "#8FEC78" : color}
-        opacity={1}
-        style={{
-          transform: isAnimating ? 'scaleY(1.1)' : 'scaleY(1)',
-          transformOrigin: 'center',
-          filter: isAnimating ? 'drop-shadow(0 0 6px rgba(143, 236, 120, 0.7))' : 'none',
-          transition: 'all 0.3s ease 0.1s',
-        }}
-      />
-      
-      {/* Bar 4 */}
-      <rect
-        x="24"
-        y="12"
-        width="4"
-        height="16"
-        rx="2"
-        fill={color}
-        opacity={isAnimating ? 1 : 0.75}
-        style={{
-          transform: isAnimating ? 'scaleY(1.2)' : 'scaleY(1)',
-          transformOrigin: 'center',
-          transition: 'all 0.3s ease 0.15s',
-        }}
-      />
-      
-      {/* Bar 5 - right */}
-      <rect
-        x="30"
-        y="16"
-        width="4"
-        height="8"
-        rx="2"
-        fill={color}
-        opacity={isAnimating ? 0.9 : 0.6}
-        style={{
-          transform: isAnimating ? 'scaleY(1.3)' : 'scaleY(1)',
-          transformOrigin: 'center',
-          transition: 'all 0.3s ease 0.2s',
-        }}
-      />
+      {bars.map((bar, index) => {
+        const isCenter = index === 2;
+        const delay = index * 0.05;
+        
+        return (
+          <rect
+            key={index}
+            x={bar.x}
+            y={bar.y}
+            width="4"
+            height={bar.height}
+            rx="2"
+            fill={isAnimating && isCenter ? "#8FEC78" : color}
+            opacity={isAnimating ? 1 : (isCenter ? 1 : 0.7)}
+            style={{
+              transform: isAnimating ? 'scaleY(1.15)' : 'scaleY(1)',
+              transformOrigin: 'center',
+              filter: isAnimating && isCenter ? 'drop-shadow(0 0 6px rgba(143, 236, 120, 0.7))' : 'none',
+              transition: `all 0.3s ease ${delay}s`,
+            }}
+          />
+        );
+      })}
     </svg>
   );
 };
