@@ -1,71 +1,69 @@
 import React from 'react';
 
-// Minimalist chat bubble with dot - represents conversation/speaking
+// Clean, modern "m" lettermark with subtle gradient - represents mumble/speaking
 const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating = false }) => {
-  const centerX = size / 2;
-  const centerY = size / 2;
-  
-  // Rounded rectangle (chat bubble) dimensions
-  const bubbleWidth = size * 0.6;
-  const bubbleHeight = size * 0.45;
-  const cornerRadius = size * 0.12;
-  
   return (
     <svg 
       width={size} 
       height={size} 
-      viewBox={`0 0 ${size} ${size}`} 
+      viewBox="0 0 40 40" 
       className={className}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Chat bubble outline */}
-      <rect
-        x={centerX - bubbleWidth / 2}
-        y={centerY - bubbleHeight / 2 - size * 0.05}
-        width={bubbleWidth}
-        height={bubbleHeight}
-        rx={cornerRadius}
+      {/* Background circle with subtle glow when animating */}
+      <circle
+        cx="20"
+        cy="20"
+        r="18"
+        fill="transparent"
         stroke={color}
-        strokeWidth={2}
-        fill="none"
-        opacity={0.85}
+        strokeWidth="1.5"
+        strokeOpacity={isAnimating ? 0.4 : 0.15}
         style={{
-          transform: isAnimating ? 'scale(1.05)' : 'scale(1)',
-          transformOrigin: 'center',
-          transition: 'transform 0.3s ease',
+          transition: 'stroke-opacity 0.3s ease',
         }}
       />
       
-      {/* Bubble tail/pointer */}
+      {/* Stylized "m" made of smooth curves */}
       <path
-        d={`M ${centerX - size * 0.08} ${centerY + bubbleHeight / 2 - size * 0.05}
-            L ${centerX - size * 0.15} ${centerY + bubbleHeight / 2 + size * 0.1}
-            L ${centerX + size * 0.02} ${centerY + bubbleHeight / 2 - size * 0.05}`}
+        d="M12 26V18C12 15.5 13.5 14 16 14C18.5 14 20 15.5 20 18V26M20 18C20 15.5 21.5 14 24 14C26.5 14 28 15.5 28 18V26"
         stroke={color}
-        strokeWidth={2}
-        fill="none"
+        strokeWidth="2.5"
+        strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={0.85}
+        fill="none"
+        style={{
+          filter: isAnimating ? 'drop-shadow(0 0 4px rgba(143, 236, 120, 0.5))' : 'none',
+          transition: 'filter 0.3s ease',
+        }}
       />
       
-      {/* Three dots inside - typing/speaking indicator */}
-      {[-1, 0, 1].map((offset, index) => (
-        <circle
-          key={index}
-          cx={centerX + offset * size * 0.12}
-          cy={centerY - size * 0.05}
-          r={size * 0.04}
-          fill={color}
-          style={{
-            opacity: isAnimating ? [0.5, 0.8, 1][index] : 0.7,
-            transform: isAnimating 
-              ? `translateY(${Math.sin(index * 0.5) * -3}px)` 
-              : 'translateY(0)',
-            transition: `all 0.3s ease ${index * 0.1}s`,
-          }}
-        />
-      ))}
+      {/* Small accent dots representing sound/speech - only visible when animating */}
+      {isAnimating && (
+        <>
+          <circle
+            cx="32"
+            cy="16"
+            r="1.5"
+            fill={color}
+            opacity="0.6"
+            style={{
+              animation: 'fadeInOut 1s ease-in-out infinite',
+            }}
+          />
+          <circle
+            cx="34"
+            cy="20"
+            r="1"
+            fill={color}
+            opacity="0.4"
+            style={{
+              animation: 'fadeInOut 1s ease-in-out infinite 0.2s',
+            }}
+          />
+        </>
+      )}
     </svg>
   );
 };
