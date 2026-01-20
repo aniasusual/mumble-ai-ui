@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import LiquidOrb from '../components/LiquidOrb';
 import MumbleLogo from '../components/MumbleLogo';
-import { welcomeConfig, mockWaitlistData, appInfo } from '../data/mock';
+import { welcomeConfig, appInfo } from '../data/mock';
 import { ArrowRight, Volume2, VolumeX, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const LandingPage = () => {
   const [email, setEmail] = useState('');
@@ -15,96 +19,107 @@ const LandingPage = () => {
   const [hasPlayed, setHasPlayed] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const audioRef = useRef(null);
 
-  // Speak welcome message using Web Speech API
-  const speakWelcome = useCallback(() => {
-    if ('speechSynthesis' in window && !hasPlayed && !isMuted) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+  // Generate speech using backend TTS API
+  const generateSpeech = useCallback(async (text) => {
+    try {
+      setAudioLoading(true);
+      const response = await axios.post(`${API}/tts`, {
+        text: text,
+        voice: welcomeConfig.voice,
+        speed: welcomeConfig.speed
+      }, {
+        responseType: 'blob'
+      });
       
-      const utterance = new SpeechSynthesisUtterance(welcomeConfig.message);
-      utterance.rate = welcomeConfig.rate;
-      utterance.pitch = welcomeConfig.pitch;
-      
-      // Find a good voice (prefer English voices)
-      const voices = window.speechSynthesis.getVoices();
-      const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-      if (englishVoice) {
-        utterance.voice = englishVoice;
-      }
-      
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        setHasPlayed(true);
-      };
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        setHasPlayed(true);
-      };
-      
-      window.speechSynthesis.speak(utterance);
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      return audioUrl;
+    } catch (error) {
+      console.error('TTS Error:', error);
+      return null;
+    } finally {
+      setAudioLoading(false);
     }
-  }, [hasPlayed, isMuted]);
+  }, []);
 
-  // Load voices and trigger welcome on mount
+  // Play welcome audio
+  const playWelcome = useCallback(async () => {
+    if (hasPlayed || isMuted || audioLoading) return;
+    
+    const audioUrl = await generateSpeech(welcomeConfig.introMessage);
+    if (audioUrl && audioRef.current) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.onplay = () => setIsSpeaking(true);
+      audioRef.current.onended = () => {
+        setIsSpeaking(false);
+        setHasPlayed(true);
+        URL.revokeObjectURL(audioUrl);
+      };
+      audioRef.current.onerror = () => {
+        setIsSpeaking(false);
+        setHasPlayed(true);
+      };
+      
+      try {
+        await audioRef.current.play();
+      } catch (e) {
+        // Autoplay blocked - user needs to interact first
+        console.log('Autoplay blocked, waiting for user interaction');
+      }
+    }
+  }, [hasPlayed, isMuted, audioLoading, generateSpeech]);
+
+  // Initialize page
   useEffect(() => {
     setIsLoaded(true);
     
-    // Voices may not be immediately available
-    const loadVoices = () => {
-      window.speechSynthesis.getVoices();
-    };
-    
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    
-    // Play welcome after a brief delay
     const timer = setTimeout(() => {
-      speakWelcome();
+      playWelcome();
     }, welcomeConfig.delay);
     
-    return () => {
-      clearTimeout(timer);
-      window.speechSynthesis.cancel();
-    };
-  }, [speakWelcome]);
+    return () => clearTimeout(timer);
+  }, [playWelcome]);
 
   // Toggle mute
   const toggleMute = () => {
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
       setIsSpeaking(false);
     }
     setIsMuted(!isMuted);
   };
 
-  // Replay welcome message
-  const replayWelcome = () => {
-    if (!isMuted) {
-      setHasPlayed(false);
-      window.speechSynthesis.cancel();
-      setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(welcomeConfig.message);
-        utterance.rate = welcomeConfig.rate;
-        utterance.pitch = welcomeConfig.pitch;
-        
-        const voices = window.speechSynthesis.getVoices();
-        const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-        if (englishVoice) {
-          utterance.voice = englishVoice;
-        }
-        
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-        
-        window.speechSynthesis.speak(utterance);
-      }, 100);
+  // Replay welcome
+  const replayWelcome = async () => {
+    if (isMuted || audioLoading) return;
+    
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    
+    setHasPlayed(false);
+    const audioUrl = await generateSpeech(welcomeConfig.introMessage);
+    if (audioUrl && audioRef.current) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.onplay = () => setIsSpeaking(true);
+      audioRef.current.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      try {
+        await audioRef.current.play();
+      } catch (e) {
+        console.log('Playback failed:', e);
+      }
     }
   };
 
-  // Handle waitlist submission (mock)
+  // Handle waitlist submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -113,7 +128,6 @@ const LandingPage = () => {
       return;
     }
     
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast.error('Please enter a valid email');
@@ -122,114 +136,85 @@ const LandingPage = () => {
     
     setIsSubmitting(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if email already exists (mock)
-    if (mockWaitlistData.checkEmail(email)) {
-      toast.info("You're already on the waitlist!");
+    try {
+      await axios.post(`${API}/waitlist`, { email });
+      setIsSubmitted(true);
+      toast.success("You're in. We'll reach out soon.");
+    } catch (error) {
+      if (error.response?.status === 400) {
+        toast.info("You're already on the list.");
+      } else {
+        toast.error('Something went wrong. Try again.');
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-    
-    // Add to mock waitlist
-    mockWaitlistData.addToWaitlist(email);
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    toast.success("You're on the list! We'll be in touch soon.");
   };
 
   return (
     <div 
-      className={`min-h-screen flex flex-col transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-      style={{
-        background: `
-          radial-gradient(at 20% 80%, rgba(143, 236, 120, 0.08) 0px, transparent 50%),
-          radial-gradient(at 80% 20%, rgba(74, 144, 217, 0.06) 0px, transparent 50%),
-          radial-gradient(at 50% 50%, rgba(34, 211, 238, 0.03) 0px, transparent 60%),
-          #FFFFFF
-        `
-      }}
+      className={`min-h-screen flex flex-col transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+      style={{ background: '#000000' }}
     >
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50">
-        <div className="mx-4 md:mx-6 mt-4 md:mt-6">
-          <nav 
-            className="flex items-center justify-between px-4 md:px-6 py-3 rounded-full"
-            style={{
-              background: 'rgba(255, 255, 255, 0.7)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '0.5px solid rgba(0, 0, 0, 0.1)',
-              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <MumbleLogo size={36} color="#8FEC78" />
-              <span 
-                className="font-semibold text-lg"
-                style={{ color: 'rgb(0, 55, 32)' }}
-              >
-                Mumble AI
-              </span>
-            </div>
-            
-            <button
-              onClick={toggleMute}
-              className="p-2 rounded-full transition-all hover:bg-black/5"
-              title={isMuted ? 'Unmute' : 'Mute'}
+      {/* Hidden audio element */}
+      <audio ref={audioRef} />
+      
+      {/* Minimal Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
+        <nav className="flex items-center justify-between max-w-4xl mx-auto">
+          <div className="flex items-center gap-2">
+            <MumbleLogo size={32} color="#ffffff" isAnimating={isSpeaking} />
+            <span 
+              className="font-medium text-base tracking-tight"
+              style={{ color: 'rgba(255, 255, 255, 0.9)' }}
             >
-              {isMuted ? (
-                <VolumeX size={20} style={{ color: 'rgb(131, 146, 140)' }} />
-              ) : (
-                <Volume2 size={20} style={{ color: 'rgb(0, 55, 32)' }} />
-              )}
-            </button>
-          </nav>
-        </div>
+              {appInfo.name}
+            </span>
+          </div>
+          
+          <button
+            onClick={toggleMute}
+            className="p-2 rounded-full transition-all hover:bg-white/5"
+            title={isMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMuted ? (
+              <VolumeX size={18} style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
+            ) : (
+              <Volume2 size={18} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+            )}
+          </button>
+        </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-12">
+      {/* Main Content - Centered */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-16">
         {/* Liquid Orb */}
         <div 
-          className="mb-8 cursor-pointer"
+          className="mb-12 cursor-pointer"
           onClick={replayWelcome}
-          title="Click to hear welcome message"
+          title="Click to hear Mia"
         >
           <LiquidOrb isSpeaking={isSpeaking} />
         </div>
 
-        {/* Text Content */}
-        <div className="text-center max-w-xl mx-auto mb-10">
+        {/* Minimal Text */}
+        <div className="text-center max-w-md mx-auto mb-12">
           <h1 
-            className="font-bold mb-4"
+            className="font-semibold mb-3"
             style={{ 
-              color: 'rgb(0, 55, 32)',
-              fontSize: 'clamp(2rem, 5vw, 3rem)',
-              lineHeight: '1.1',
-              letterSpacing: '-0.02em',
+              color: '#ffffff',
+              fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+              lineHeight: '1.15',
+              letterSpacing: '-0.03em',
             }}
           >
             {appInfo.tagline}
           </h1>
           <p 
-            className="mb-2"
             style={{ 
-              color: 'rgb(131, 146, 140)',
-              fontSize: 'clamp(1.125rem, 2.5vw, 1.25rem)',
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
               lineHeight: '1.5',
-            }}
-          >
-            {appInfo.subtitle}
-          </p>
-          <p 
-            className="text-sm"
-            style={{ 
-              color: 'rgb(175, 183, 180)',
-              maxWidth: '400px',
-              margin: '0 auto',
             }}
           >
             {appInfo.description}
@@ -237,40 +222,40 @@ const LandingPage = () => {
         </div>
 
         {/* Waitlist Form */}
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-sm">
           {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <Input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
-                className="flex-1 h-12 px-5 rounded-full border-gray-200 focus:border-green-300 transition-all"
+                className="h-12 px-5 rounded-full text-white placeholder:text-white/30 transition-all"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.8)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               />
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="h-12 px-6 rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                disabled={isSubmitting || audioLoading}
+                className="h-12 px-6 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: 'linear-gradient(to bottom right, #8FEC78, #81DD67)',
-                  color: 'white',
+                  background: '#ffffff',
+                  color: '#000000',
                   border: 'none',
-                  boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
                 }}
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                     Joining...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Join Waitlist
-                    <ArrowRight size={18} />
+                    Join waitlist
+                    <ArrowRight size={16} />
                   </span>
                 )}
               </Button>
@@ -280,30 +265,30 @@ const LandingPage = () => {
               className="flex items-center justify-center gap-3 py-4 px-6 rounded-full"
               style={{
                 background: 'rgba(143, 236, 120, 0.1)',
-                border: '1px solid rgba(143, 236, 120, 0.3)',
+                border: '1px solid rgba(143, 236, 120, 0.2)',
               }}
             >
               <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
+                className="w-6 h-6 rounded-full flex items-center justify-center"
                 style={{ background: '#8FEC78' }}
               >
-                <Check size={18} color="white" />
+                <Check size={14} color="#000" />
               </div>
-              <span style={{ color: 'rgb(0, 55, 32)', fontWeight: 500 }}>
-                You're on the list! We'll be in touch.
+              <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.95rem' }}>
+                You're in. We'll be in touch.
               </span>
             </div>
           )}
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Minimal Footer */}
       <footer className="py-6 px-6 text-center">
         <p 
-          className="text-sm"
-          style={{ color: 'rgb(175, 183, 180)' }}
+          className="text-xs"
+          style={{ color: 'rgba(255, 255, 255, 0.2)' }}
         >
-          © {new Date().getFullYear()} Mumble AI. All rights reserved.
+          © {new Date().getFullYear()} mumble
         </p>
       </footer>
     </div>
