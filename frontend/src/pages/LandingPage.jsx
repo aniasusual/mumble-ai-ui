@@ -133,19 +133,21 @@ const LandingPage = () => {
   useEffect(() => {
     setIsLoaded(true);
     
-    // Only run intro once
-    if (hasIntroducedRef.current) return;
-    hasIntroducedRef.current = true;
+    // Prevent double call in strict mode
+    if (introCalledRef.current) return;
+    introCalledRef.current = true;
     
     const introduceAI = async () => {
+      console.log('Starting AI intro...');
+      setIsChatting(true);
+      
       try {
-        setIsChatting(true);
-        
         const response = await axios.post(`${API}/chat-voice`, {
           message: "Introduce yourself briefly as Mia, the AI language tutor for Mumble",
           session_id: sessionId
         }, { timeout: 30000 });
         
+        console.log('AI intro response received:', response.data.response);
         setCurrentResponse(response.data.response);
         setSessionId(response.data.session_id);
         
@@ -157,9 +159,12 @@ const LandingPage = () => {
           audioRef.current.onended = () => setIsSpeaking(false);
           audioRef.current.onerror = () => setIsSpeaking(false);
           
-          audioRef.current.play().catch(e => {
-            console.log('Auto-play blocked, user interaction needed:', e);
-          });
+          try {
+            await audioRef.current.play();
+          } catch (e) {
+            console.log('Auto-play blocked:', e.message);
+            // Audio blocked, but text still shows
+          }
         }
       } catch (error) {
         console.error('Intro error:', error);
@@ -168,8 +173,8 @@ const LandingPage = () => {
       }
     };
     
-    // Small delay for page to render
-    const timer = setTimeout(introduceAI, miaConfig.delay);
+    // Start intro immediately
+    introduceAI();
     
     return () => clearTimeout(timer);
   }, [sessionId]);
