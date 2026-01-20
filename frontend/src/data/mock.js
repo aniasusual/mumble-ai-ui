@@ -1,10 +1,8 @@
 // Mock data for Mumble AI Landing Page
 
 export const mockWaitlistData = {
-  // Simulated waitlist entries
   entries: [],
   
-  // Add to waitlist (mock function)
   addToWaitlist: (email) => {
     const newEntry = {
       id: Date.now(),
@@ -15,29 +13,23 @@ export const mockWaitlistData = {
     return newEntry;
   },
   
-  // Check if email exists
   checkEmail: (email) => {
     return mockWaitlistData.entries.some(entry => entry.email === email);
   }
 };
 
-// Welcome message configuration
+// AI Tutor introduction - personal and engaging
 export const welcomeConfig = {
-  message: "Welcome to Mumble AI. Your playground to learn anything. Start with learning languages.",
-  delay: 1000, // Delay before speaking (ms)
-  rate: 0.9, // Speech rate
-  pitch: 1, // Speech pitch
+  tutorName: "Mia",
+  introMessage: `Hi! I'm Mia, your personal AI language tutor. I'll guide you from your first word to fluent conversations. No rigid lessons, just natural learning, tailored to you. Let's make you fluent.`,
+  delay: 800,
+  voice: "nova", // Energetic, upbeat
+  speed: 1.0,
 };
 
-// App information
+// App information - minimalistic
 export const appInfo = {
-  name: "Mumble AI",
-  tagline: "Your playground to learn anything",
-  subtitle: "Start with learning languages",
-  description: "A multi-agent AI system that acts as your personal language tutor. From planning your curriculum to making you fluent.",
-  features: [
-    "Personalized curriculum planning",
-    "Adaptive learning paths",
-    "Real-time conversation practice"
-  ]
+  name: "mumble",
+  tagline: "Learn languages naturally",
+  description: "Your AI tutor. From first words to fluent conversations.",
 };
