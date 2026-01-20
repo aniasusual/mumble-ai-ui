@@ -124,46 +124,27 @@ code {
   }
 }
 
+/* Smooth speaking animation - gentle breathing effect */
 @keyframes orbSpeaking {
   0%, 100% {
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
     transform: scale(1);
   }
-  10% {
-    border-radius: 40% 60% 50% 50% / 50% 50% 50% 50%;
-    transform: scale(1.12);
-  }
-  20% {
-    border-radius: 50% 50% 60% 40% / 40% 60% 40% 60%;
-    transform: scale(1.04);
-  }
-  30% {
-    border-radius: 30% 70% 40% 60% / 60% 40% 70% 30%;
-    transform: scale(1.15);
-  }
-  40% {
-    border-radius: 60% 40% 70% 30% / 30% 70% 30% 70%;
+  50% {
+    border-radius: 50% 50% 40% 60% / 50% 40% 60% 50%;
     transform: scale(1.06);
   }
+}
+
+/* Soft pulse for speaking glow */
+@keyframes softPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
   50% {
-    border-radius: 45% 55% 35% 65% / 55% 45% 65% 35%;
-    transform: scale(1.14);
-  }
-  60% {
-    border-radius: 55% 45% 65% 35% / 35% 65% 35% 65%;
-    transform: scale(1.02);
-  }
-  70% {
-    border-radius: 35% 65% 45% 55% / 65% 35% 55% 45%;
-    transform: scale(1.18);
-  }
-  80% {
-    border-radius: 65% 35% 55% 45% / 45% 55% 45% 55%;
+    opacity: 0.6;
     transform: scale(1.08);
-  }
-  90% {
-    border-radius: 50% 50% 40% 60% / 60% 40% 50% 50%;
-    transform: scale(1.12);
   }
 }
 
