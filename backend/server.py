@@ -138,6 +138,73 @@ async def check_waitlist(email: str):
     existing = await db.waitlist.find_one({"email": email})
     return {"exists": existing is not None}
 
+# Chat endpoint - conversation with Mia
+@api_router.post("/chat", response_model=ChatResponse)
+async def chat_with_mia(request: ChatRequest):
+    try:
+        session_id = request.session_id
+        
+        # Get or create chat session
+        if session_id not in chat_sessions:
+            chat_sessions[session_id] = LlmChat(
+                api_key=os.getenv("EMERGENT_LLM_KEY"),
+                session_id=session_id,
+                system_message=MIA_SYSTEM_PROMPT
+            ).with_model("openai", "gpt-4.1-mini")
+        
+        chat = chat_sessions[session_id]
+        
+        # Send message and get response
+        user_message = UserMessage(text=request.message)
+        response = await chat.send_message(user_message)
+        
+        return ChatResponse(response=response, session_id=session_id)
+    except Exception as e:
+        logging.error(f"Chat error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
+
+# Combined chat + TTS endpoint for voice responses
+@api_router.post("/chat-voice")
+async def chat_with_voice(request: ChatRequest):
+    try:
+        session_id = request.session_id
+        
+        # Get or create chat session
+        if session_id not in chat_sessions:
+            chat_sessions[session_id] = LlmChat(
+                api_key=os.getenv("EMERGENT_LLM_KEY"),
+                session_id=session_id,
+                system_message=MIA_SYSTEM_PROMPT
+            ).with_model("openai", "gpt-4.1-mini")
+        
+        chat = chat_sessions[session_id]
+        
+        # Send message and get response
+        user_message = UserMessage(text=request.message)
+        text_response = await chat.send_message(user_message)
+        
+        # Generate speech from response
+        audio_bytes = await tts.generate_speech(
+            text=text_response,
+            model="tts-1",
+            voice="nova",
+            speed=1.0,
+            response_format="mp3"
+        )
+        
+        # Return both text and audio
+        import base64
+        audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+        
+        return {
+            "response": text_response,
+            "audio": audio_base64,
+            "session_id": session_id
+        }
+    except Exception as e:
+        logging.error(f"Chat voice error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Chat voice failed: {str(e)}")
+
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()
