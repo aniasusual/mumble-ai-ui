@@ -162,7 +162,8 @@ code {
 }
 
 .liquid-orb.speaking {
-  animation: orbSpeaking 0.4s ease-in-out infinite, float 8s ease-in-out infinite;
+  /* Smooth, gentle breathing animation - much slower and subtler */
+  animation: orbSpeaking 2s ease-in-out infinite, float 8s ease-in-out infinite;
 }
 
 .orb-glow {
