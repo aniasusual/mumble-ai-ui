@@ -89,6 +89,14 @@ class WaitlistEntry(BaseModel):
 class WaitlistCreate(BaseModel):
     email: EmailStr
 
+class ChatRequest(BaseModel):
+    message: str
+    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+class ChatResponse(BaseModel):
+    response: str
+    session_id: str
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
