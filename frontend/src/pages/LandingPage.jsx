@@ -34,7 +34,7 @@ const LandingPage = () => {
   
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
-  const hasIntroducedRef = useRef(false);
+  const introCalledRef = useRef(false);
 
   // Initialize speech recognition
   useEffect(() => {
