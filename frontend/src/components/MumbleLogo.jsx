@@ -1,17 +1,16 @@
 import React from 'react';
 
-// Waveform-based "M" logo - represents sound/mumble
+// Concentric sound ripples logo - represents voice/speech emanating outward
 const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating = false }) => {
-  const barWidth = size * 0.08;
-  const gap = size * 0.06;
-  const maxHeight = size * 0.7;
+  const centerX = size / 2;
+  const centerY = size / 2;
   
-  // 5 bars forming an "M" shape with waveform aesthetic
-  // Heights: short, tall, medium, tall, short (M shape)
-  const barHeights = [0.5, 0.9, 0.6, 0.9, 0.5];
-  
-  const totalWidth = (barWidth * 5) + (gap * 4);
-  const startX = (size - totalWidth) / 2;
+  // Three concentric arcs on the right side (like sound waves)
+  const arcs = [
+    { radius: size * 0.15, strokeWidth: 2.5 },
+    { radius: size * 0.26, strokeWidth: 2 },
+    { radius: size * 0.37, strokeWidth: 1.5 },
+  ];
   
   return (
     <svg 
@@ -22,27 +21,39 @@ const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating 
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {barHeights.map((heightRatio, index) => {
-        const barHeight = maxHeight * heightRatio;
-        const x = startX + (index * (barWidth + gap));
-        const y = (size - barHeight) / 2;
-        
-        return (
-          <rect
-            key={index}
-            className={`waveform-bar ${!isAnimating ? 'paused' : ''}`}
-            x={x}
-            y={y}
-            width={barWidth}
-            height={barHeight}
-            rx={barWidth / 2}
-            fill={color}
-            style={{
-              transformOrigin: `${x + barWidth/2}px ${size/2}px`,
-            }}
-          />
-        );
-      })}
+      {/* Center dot - the source of sound */}
+      <circle
+        cx={centerX * 0.65}
+        cy={centerY}
+        r={size * 0.08}
+        fill={color}
+        style={{
+          opacity: isAnimating ? 1 : 0.9,
+          transform: isAnimating ? 'scale(1.1)' : 'scale(1)',
+          transformOrigin: `${centerX * 0.65}px ${centerY}px`,
+          transition: 'all 0.2s ease',
+        }}
+      />
+      
+      {/* Sound wave arcs */}
+      {arcs.map((arc, index) => (
+        <path
+          key={index}
+          d={`M ${centerX * 0.65 + arc.radius * 0.7} ${centerY - arc.radius}
+              A ${arc.radius} ${arc.radius} 0 0 1 ${centerX * 0.65 + arc.radius * 0.7} ${centerY + arc.radius}`}
+          stroke={color}
+          strokeWidth={arc.strokeWidth}
+          strokeLinecap="round"
+          fill="none"
+          style={{
+            opacity: isAnimating ? [0.9, 0.7, 0.5][index] : [0.8, 0.6, 0.4][index],
+            transform: isAnimating 
+              ? `translateX(${(index + 1) * 2}px)` 
+              : 'translateX(0)',
+            transition: `all 0.3s ease ${index * 0.1}s`,
+          }}
+        />
+      ))}
     </svg>
   );
 };
