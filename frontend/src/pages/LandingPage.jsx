@@ -22,7 +22,39 @@ const LandingPage = () => {
   const [audioLoading, setAudioLoading] = useState(false);
   const audioRef = useRef(null);
 
-  // Generate speech using backend TTS API
+  // Fallback to Web Speech API
+  const speakWithWebSpeech = useCallback((text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const femaleVoice = voices.find(v => 
+        v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google US English'))
+      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+      
+      if (femaleVoice) utterance.voice = femaleVoice;
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setHasPlayed(true);
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        setHasPlayed(true);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Generate speech using backend TTS API with fallback
   const generateSpeech = useCallback(async (text) => {
     try {
       setAudioLoading(true);
@@ -31,14 +63,15 @@ const LandingPage = () => {
         voice: welcomeConfig.voice,
         speed: welcomeConfig.speed
       }, {
-        responseType: 'blob'
+        responseType: 'blob',
+        timeout: 10000 // 10 second timeout
       });
       
       const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
       return audioUrl;
     } catch (error) {
-      console.error('TTS Error:', error);
+      console.log('TTS API unavailable, using fallback');
       return null;
     } finally {
       setAudioLoading(false);
@@ -50,6 +83,7 @@ const LandingPage = () => {
     if (hasPlayed || isMuted || audioLoading) return;
     
     const audioUrl = await generateSpeech(welcomeConfig.introMessage);
+    
     if (audioUrl && audioRef.current) {
       audioRef.current.src = audioUrl;
       audioRef.current.onplay = () => setIsSpeaking(true);
@@ -60,35 +94,53 @@ const LandingPage = () => {
       };
       audioRef.current.onerror = () => {
         setIsSpeaking(false);
-        setHasPlayed(true);
+        // Fallback to Web Speech
+        speakWithWebSpeech(welcomeConfig.introMessage);
       };
       
       try {
         await audioRef.current.play();
       } catch (e) {
-        // Autoplay blocked - user needs to interact first
-        console.log('Autoplay blocked, waiting for user interaction');
+        // Autoplay blocked - try Web Speech as it may work on user gesture
+        console.log('Autoplay blocked');
       }
+    } else {
+      // Fallback to Web Speech API
+      speakWithWebSpeech(welcomeConfig.introMessage);
     }
-  }, [hasPlayed, isMuted, audioLoading, generateSpeech]);
+  }, [hasPlayed, isMuted, audioLoading, generateSpeech, speakWithWebSpeech]);
 
   // Initialize page
   useEffect(() => {
     setIsLoaded(true);
     
+    // Load voices for fallback
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+    
     const timer = setTimeout(() => {
       playWelcome();
     }, welcomeConfig.delay);
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, [playWelcome]);
 
   // Toggle mute
   const toggleMute = () => {
     if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause();
-      setIsSpeaking(false);
     }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
     setIsMuted(!isMuted);
   };
 
@@ -100,9 +152,14 @@ const LandingPage = () => {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     
     setHasPlayed(false);
+    
     const audioUrl = await generateSpeech(welcomeConfig.introMessage);
+    
     if (audioUrl && audioRef.current) {
       audioRef.current.src = audioUrl;
       audioRef.current.onplay = () => setIsSpeaking(true);
@@ -110,12 +167,18 @@ const LandingPage = () => {
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
       };
+      audioRef.current.onerror = () => {
+        setIsSpeaking(false);
+        speakWithWebSpeech(welcomeConfig.introMessage);
+      };
       
       try {
         await audioRef.current.play();
       } catch (e) {
-        console.log('Playback failed:', e);
+        speakWithWebSpeech(welcomeConfig.introMessage);
       }
+    } else {
+      speakWithWebSpeech(welcomeConfig.introMessage);
     }
   };
 
@@ -239,7 +302,7 @@ const LandingPage = () => {
               />
               <Button
                 type="submit"
-                disabled={isSubmitting || audioLoading}
+                disabled={isSubmitting}
                 className="h-12 px-6 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   background: '#ffffff',
