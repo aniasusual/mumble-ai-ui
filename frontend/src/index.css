@@ -3,58 +3,54 @@
 @tailwind utilities;
 
 :root {
-  /* Backgrounds - Clean & Minimal */
-  --bg-page: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-section: rgba(0, 0, 0, 0.02);
+  /* Dark Theme - Minimalistic Black */
+  --bg-page: #000000;
+  --bg-card: #0a0a0a;
+  --bg-section: rgba(255, 255, 255, 0.02);
   
-  /* Text - Professional Hierarchy */
-  --text-primary: rgb(0, 55, 32);
-  --text-body: rgb(14, 15, 12);
-  --text-secondary: rgb(131, 146, 140);
-  --text-muted: rgb(175, 183, 180);
+  /* Text - Clean Hierarchy */
+  --text-primary: #ffffff;
+  --text-body: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.3);
   
-  /* Borders - Subtle Separation */
-  --border-light: rgba(0, 0, 0, 0.1);
-  --border-medium: rgba(0, 0, 0, 0.2);
-  --border-strong: rgba(0, 0, 0, 0.3);
+  /* Borders */
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.15);
   
-  /* BRAND COLORS - Green/Blue/Black/White */
+  /* Accent - Subtle green glow */
   --accent-primary: #8FEC78;
-  --accent-strong: #81DD67;
-  --accent-text: rgb(13, 121, 22);
-  --accent-wash: rgba(148, 242, 127, 0.1);
-  
-  /* Blue accents */
-  --blue-primary: #4A90D9;
-  --blue-light: #6BB5FF;
-  --blue-dark: #2563EB;
+  --accent-glow: rgba(143, 236, 120, 0.15);
   
   /* Orb colors */
   --orb-green: #8FEC78;
   --orb-blue: #4A90D9;
   --orb-cyan: #22D3EE;
   
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.9%;
-  --primary: 0 0% 9%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 4%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 4%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 50%;
+  --accent: 0 0% 10%;
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
+  --ring: 0 0% 100%;
   --radius: 0.5rem;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -87,7 +83,7 @@ code {
   }
   25% {
     border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-    transform: rotate(90deg) scale(1.05);
+    transform: rotate(90deg) scale(1.02);
   }
   50% {
     border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%;
@@ -95,7 +91,7 @@ code {
   }
   75% {
     border-radius: 60% 40% 70% 30% / 60% 30% 50% 60%;
-    transform: rotate(270deg) scale(1.05);
+    transform: rotate(270deg) scale(1.02);
   }
 }
 
@@ -104,38 +100,27 @@ code {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-20px);
+    transform: translateY(-15px);
   }
 }
 
 @keyframes pulse {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.4;
     transform: scale(1);
   }
   50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-}
-
-@keyframes ripple {
-  0% {
-    transform: scale(1);
     opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
+    transform: scale(1.05);
   }
 }
 
 @keyframes glow {
   0%, 100% {
-    filter: blur(40px) brightness(1);
+    filter: blur(60px) brightness(0.8);
   }
   50% {
-    filter: blur(50px) brightness(1.2);
+    filter: blur(80px) brightness(1);
   }
 }
 
@@ -146,56 +131,76 @@ code {
   }
   10% {
     border-radius: 40% 60% 50% 50% / 50% 50% 50% 50%;
-    transform: scale(1.15);
+    transform: scale(1.12);
   }
   20% {
     border-radius: 50% 50% 60% 40% / 40% 60% 40% 60%;
-    transform: scale(1.05);
+    transform: scale(1.04);
   }
   30% {
     border-radius: 30% 70% 40% 60% / 60% 40% 70% 30%;
-    transform: scale(1.2);
+    transform: scale(1.15);
   }
   40% {
     border-radius: 60% 40% 70% 30% / 30% 70% 30% 70%;
-    transform: scale(1.08);
+    transform: scale(1.06);
   }
   50% {
     border-radius: 45% 55% 35% 65% / 55% 45% 65% 35%;
-    transform: scale(1.18);
+    transform: scale(1.14);
   }
   60% {
     border-radius: 55% 45% 65% 35% / 35% 65% 35% 65%;
-    transform: scale(1.03);
+    transform: scale(1.02);
   }
   70% {
     border-radius: 35% 65% 45% 55% / 65% 35% 55% 45%;
-    transform: scale(1.22);
+    transform: scale(1.18);
   }
   80% {
     border-radius: 65% 35% 55% 45% / 45% 55% 45% 55%;
-    transform: scale(1.1);
+    transform: scale(1.08);
   }
   90% {
     border-radius: 50% 50% 40% 60% / 60% 40% 50% 50%;
-    transform: scale(1.15);
+    transform: scale(1.12);
+  }
+}
+
+@keyframes waveform {
+  0%, 100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
   }
 }
 
 .liquid-orb {
-  animation: morphOrb 8s ease-in-out infinite, float 6s ease-in-out infinite;
+  animation: morphOrb 10s ease-in-out infinite, float 8s ease-in-out infinite;
 }
 
 .liquid-orb.speaking {
-  animation: orbSpeaking 0.5s ease-in-out infinite, float 6s ease-in-out infinite;
+  animation: orbSpeaking 0.4s ease-in-out infinite, float 8s ease-in-out infinite;
 }
 
 .orb-glow {
-  animation: glow 4s ease-in-out infinite;
+  animation: glow 6s ease-in-out infinite;
 }
 
-.ripple-effect {
-  animation: ripple 2s ease-out infinite;
+/* Waveform animation for logo */
+.waveform-bar {
+  animation: waveform 0.8s ease-in-out infinite;
+}
+
+.waveform-bar:nth-child(1) { animation-delay: 0s; }
+.waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+.waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+.waveform-bar:nth-child(4) { animation-delay: 0.15s; }
+.waveform-bar:nth-child(5) { animation-delay: 0.05s; }
+
+.waveform-bar.paused {
+  animation-play-state: paused;
 }
 
 /* Smooth transitions */
@@ -206,7 +211,7 @@ code {
 /* Focus styles */
 input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(143, 236, 120, 0.3);
+  border-color: rgba(143, 236, 120, 0.5) !important;
 }
 
 /* Reduced motion */
