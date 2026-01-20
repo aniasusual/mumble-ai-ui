@@ -1,15 +1,17 @@
 import React from 'react';
 
-const MumbleLogo = ({ className = "", size = 40, color = "#8FEC78" }) => {
-  const pillWidth = size * 0.18;
-  const pillHeight = size * 0.7;
-  const gap = size * 0.12;
-  const cornerRadius = pillWidth / 2;
+// Waveform-based "M" logo - represents sound/mumble
+const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating = false }) => {
+  const barWidth = size * 0.08;
+  const gap = size * 0.06;
+  const maxHeight = size * 0.7;
   
-  // Calculate positions for 3 pills
-  const totalWidth = (pillWidth * 3) + (gap * 2);
+  // 5 bars forming an "M" shape with waveform aesthetic
+  // Heights: short, tall, medium, tall, short (M shape)
+  const barHeights = [0.5, 0.9, 0.6, 0.9, 0.5];
+  
+  const totalWidth = (barWidth * 5) + (gap * 4);
   const startX = (size - totalWidth) / 2;
-  const pillY = (size - pillHeight) / 2;
   
   return (
     <svg 
@@ -20,33 +22,27 @@ const MumbleLogo = ({ className = "", size = 40, color = "#8FEC78" }) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* First pill */}
-      <rect 
-        x={startX} 
-        y={pillY} 
-        width={pillWidth} 
-        height={pillHeight} 
-        rx={cornerRadius}
-        fill={color}
-      />
-      {/* Second pill (middle, slightly taller) */}
-      <rect 
-        x={startX + pillWidth + gap} 
-        y={pillY - size * 0.08} 
-        width={pillWidth} 
-        height={pillHeight + size * 0.08} 
-        rx={cornerRadius}
-        fill={color}
-      />
-      {/* Third pill */}
-      <rect 
-        x={startX + (pillWidth + gap) * 2} 
-        y={pillY} 
-        width={pillWidth} 
-        height={pillHeight} 
-        rx={cornerRadius}
-        fill={color}
-      />
+      {barHeights.map((heightRatio, index) => {
+        const barHeight = maxHeight * heightRatio;
+        const x = startX + (index * (barWidth + gap));
+        const y = (size - barHeight) / 2;
+        
+        return (
+          <rect
+            key={index}
+            className={`waveform-bar ${!isAnimating ? 'paused' : ''}`}
+            x={x}
+            y={y}
+            width={barWidth}
+            height={barHeight}
+            rx={barWidth / 2}
+            fill={color}
+            style={{
+              transformOrigin: `${x + barWidth/2}px ${size/2}px`,
+            }}
+          />
+        );
+      })}
     </svg>
   );
 };
