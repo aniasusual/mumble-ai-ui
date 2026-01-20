@@ -20,38 +20,44 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
   const offsetY = (mousePosition.y - 0.5) * 15;
   
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative ${className}`}
+      style={{
+        // Add padding to prevent clipping of glow and animations
+        padding: '40px',
+        margin: '-40px',
+      }}
+    >
       {/* Glow effect behind orb - subtle on dark background */}
       <div 
-        className="absolute inset-0 orb-glow"
+        className="absolute orb-glow"
         style={{
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
           background: 'radial-gradient(circle, rgba(143, 236, 120, 0.25) 0%, rgba(74, 144, 217, 0.15) 40%, transparent 70%)',
           transform: `translate(${offsetX * 0.5}px, ${offsetY * 0.5}px)`,
           transition: 'transform 0.4s ease-out',
         }}
       />
       
-      {/* Ripple effects when speaking */}
+      {/* Soft pulse effect when speaking - very subtle */}
       {isSpeaking && (
-        <>
-          <div 
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'radial-gradient(circle, transparent 40%, rgba(143, 236, 120, 0.15) 60%, transparent 70%)',
-              animation: 'pulse 1.5s ease-in-out infinite',
-            }}
-          />
-          <div 
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'radial-gradient(circle, transparent 40%, rgba(74, 144, 217, 0.1) 60%, transparent 70%)',
-              animation: 'pulse 1.5s ease-in-out infinite 0.5s',
-            }}
-          />
-        </>
+        <div 
+          className="absolute rounded-full"
+          style={{
+            top: '40px',
+            left: '40px',
+            right: '40px',
+            bottom: '40px',
+            background: 'radial-gradient(circle, transparent 45%, rgba(143, 236, 120, 0.12) 55%, transparent 65%)',
+            animation: 'softPulse 2s ease-in-out infinite',
+          }}
+        />
       )}
       
-      {/* Main liquid orb - darker, more subtle */}
+      {/* Main liquid orb */}
       <div 
         className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-40 h-40 md:w-52 md:h-52`}
         style={{
