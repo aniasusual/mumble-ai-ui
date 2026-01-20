@@ -175,8 +175,6 @@ const LandingPage = () => {
     
     // Start intro immediately
     introduceAI();
-    
-    return () => clearTimeout(timer);
   }, [sessionId]);
 
   // Toggle mute
