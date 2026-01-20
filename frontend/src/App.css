@@ -32,3 +32,8 @@
         transform: rotate(360deg);
     }
 }
+
+/* Ensure app doesn't center align text */
+.App {
+    min-height: 100vh;
+}
