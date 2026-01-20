@@ -1,8 +1,12 @@
 import React from 'react';
 
-// Abstract speech bubble with sound waves - modern and minimal
+// Two overlapping circles forming an abstract "m" - modern, clean, memorable
 const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating = false }) => {
-  const centerX = size / 2;
+  const r = size * 0.22; // radius of each circle
+  const overlap = size * 0.12; // how much circles overlap
+  
+  const leftX = size / 2 - r + overlap / 2;
+  const rightX = size / 2 + r - overlap / 2;
   const centerY = size / 2;
   
   return (
@@ -14,53 +18,50 @@ const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating 
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Outer ring - speech bubble abstraction */}
+      {/* Left circle */}
       <circle
-        cx={centerX}
+        cx={leftX}
         cy={centerY}
-        r={size * 0.38}
+        r={r}
         stroke={color}
-        strokeWidth={2}
+        strokeWidth={2.5}
         fill="none"
-        opacity={0.3}
-      />
-      
-      {/* Inner animated ring */}
-      <circle
-        cx={centerX}
-        cy={centerY}
-        r={size * 0.26}
-        stroke={color}
-        strokeWidth={2}
-        fill="none"
-        opacity={0.6}
         style={{
-          transform: isAnimating ? 'scale(1.1)' : 'scale(1)',
-          transformOrigin: 'center',
-          transition: 'transform 0.3s ease',
+          opacity: isAnimating ? 1 : 0.85,
+          transform: isAnimating ? 'scale(1.05)' : 'scale(1)',
+          transformOrigin: `${leftX}px ${centerY}px`,
+          transition: 'all 0.3s ease',
         }}
       />
       
-      {/* Center dot - voice source */}
+      {/* Right circle */}
       <circle
-        cx={centerX}
+        cx={rightX}
         cy={centerY}
-        r={size * 0.1}
-        fill={color}
+        r={r}
+        stroke={color}
+        strokeWidth={2.5}
+        fill="none"
         style={{
-          transform: isAnimating ? 'scale(1.2)' : 'scale(1)',
-          transformOrigin: 'center',
-          transition: 'transform 0.2s ease',
+          opacity: isAnimating ? 1 : 0.85,
+          transform: isAnimating ? 'scale(1.05)' : 'scale(1)',
+          transformOrigin: `${rightX}px ${centerY}px`,
+          transition: 'all 0.3s ease 0.1s',
         }}
       />
       
-      {/* Small accent dot - like a speech indicator */}
+      {/* Center connection dot */}
       <circle
-        cx={centerX + size * 0.32}
-        cy={centerY + size * 0.32}
-        r={size * 0.05}
+        cx={size / 2}
+        cy={centerY}
+        r={size * 0.045}
         fill={color}
-        opacity={0.7}
+        style={{
+          opacity: isAnimating ? 1 : 0.7,
+          transform: isAnimating ? 'scale(1.3)' : 'scale(1)',
+          transformOrigin: 'center',
+          transition: 'all 0.2s ease',
+        }}
       />
     </svg>
   );
