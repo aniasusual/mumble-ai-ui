@@ -3,8 +3,8 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import LiquidOrb from '../components/LiquidOrb';
 import MumbleLogo from '../components/MumbleLogo';
-import { welcomeConfig, appInfo } from '../data/mock';
-import { ArrowRight, Volume2, VolumeX, Check } from 'lucide-react';
+import { miaConfig, appInfo, suggestedQuestions } from '../data/mock';
+import { ArrowRight, Send, Mic, MicOff, Volume2, VolumeX, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -12,178 +12,108 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const LandingPage = () => {
+  // Form states
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  // Chat states
+  const [chatInput, setChatInput] = useState('');
+  const [isChatting, setIsChatting] = useState(false);
+  const [sessionId, setSessionId] = useState(() => `session-${Date.now()}`);
+  const [currentResponse, setCurrentResponse] = useState('');
+  
+  // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [hasPlayed, setHasPlayed] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [audioLoading, setAudioLoading] = useState(false);
+  const [hasIntroduced, setHasIntroduced] = useState(false);
+  
   const audioRef = useRef(null);
 
-  // Fallback to Web Speech API
-  const speakWithWebSpeech = useCallback((text) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1;
-      
-      const voices = window.speechSynthesis.getVoices();
-      const femaleVoice = voices.find(v => 
-        v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google US English'))
-      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-      
-      if (femaleVoice) utterance.voice = femaleVoice;
-      
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        setHasPlayed(true);
-      };
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        setHasPlayed(true);
-      };
-      
-      window.speechSynthesis.speak(utterance);
-      return true;
-    }
-    return false;
-  }, []);
+  // Play audio from base64
+  const playAudioFromBase64 = useCallback((base64Audio) => {
+    if (isMuted || !audioRef.current) return;
+    
+    const audioSrc = `data:audio/mpeg;base64,${base64Audio}`;
+    audioRef.current.src = audioSrc;
+    audioRef.current.onplay = () => setIsSpeaking(true);
+    audioRef.current.onended = () => setIsSpeaking(false);
+    audioRef.current.onerror = () => setIsSpeaking(false);
+    
+    audioRef.current.play().catch(e => {
+      console.log('Audio playback failed:', e);
+      setIsSpeaking(false);
+    });
+  }, [isMuted]);
 
-  // Generate speech using backend TTS API with fallback
-  const generateSpeech = useCallback(async (text) => {
+  // Send message to Mia and get voice response
+  const sendMessage = useCallback(async (message) => {
+    if (!message.trim() || isChatting) return;
+    
+    setIsChatting(true);
+    setCurrentResponse('');
+    
     try {
-      setAudioLoading(true);
-      const response = await axios.post(`${API}/tts`, {
-        text: text,
-        voice: welcomeConfig.voice,
-        speed: welcomeConfig.speed
-      }, {
-        responseType: 'blob',
-        timeout: 10000 // 10 second timeout
-      });
+      const response = await axios.post(`${API}/chat-voice`, {
+        message: message,
+        session_id: sessionId
+      }, { timeout: 30000 });
       
-      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      return audioUrl;
-    } catch (error) {
-      console.log('TTS API unavailable, using fallback');
-      return null;
-    } finally {
-      setAudioLoading(false);
-    }
-  }, []);
-
-  // Play welcome audio
-  const playWelcome = useCallback(async () => {
-    if (hasPlayed || isMuted || audioLoading) return;
-    
-    const audioUrl = await generateSpeech(welcomeConfig.introMessage);
-    
-    if (audioUrl && audioRef.current) {
-      audioRef.current.src = audioUrl;
-      audioRef.current.onplay = () => setIsSpeaking(true);
-      audioRef.current.onended = () => {
-        setIsSpeaking(false);
-        setHasPlayed(true);
-        URL.revokeObjectURL(audioUrl);
-      };
-      audioRef.current.onerror = () => {
-        setIsSpeaking(false);
-        // Fallback to Web Speech
-        speakWithWebSpeech(welcomeConfig.introMessage);
-      };
+      setCurrentResponse(response.data.response);
+      setSessionId(response.data.session_id);
       
-      try {
-        await audioRef.current.play();
-      } catch (e) {
-        // Autoplay blocked - try Web Speech as it may work on user gesture
-        console.log('Autoplay blocked');
+      // Play the audio response
+      if (response.data.audio) {
+        playAudioFromBase64(response.data.audio);
       }
-    } else {
-      // Fallback to Web Speech API
-      speakWithWebSpeech(welcomeConfig.introMessage);
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast.error('Mia is thinking... try again!');
+    } finally {
+      setIsChatting(false);
     }
-  }, [hasPlayed, isMuted, audioLoading, generateSpeech, speakWithWebSpeech]);
+  }, [isChatting, sessionId, playAudioFromBase64]);
 
-  // Initialize page
+  // Handle intro on page load
   useEffect(() => {
     setIsLoaded(true);
     
-    // Load voices for fallback
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
-    
-    const timer = setTimeout(() => {
-      playWelcome();
-    }, welcomeConfig.delay);
-    
-    return () => {
-      clearTimeout(timer);
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    const introduceTimer = setTimeout(async () => {
+      if (!hasIntroduced && !isMuted) {
+        setHasIntroduced(true);
+        await sendMessage("Introduce yourself briefly");
       }
-    };
-  }, [playWelcome]);
+    }, miaConfig.delay);
+    
+    return () => clearTimeout(introduceTimer);
+  }, []); // Only run once on mount
 
   // Toggle mute
   const toggleMute = () => {
     if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause();
+      setIsSpeaking(false);
     }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setIsSpeaking(false);
     setIsMuted(!isMuted);
   };
 
-  // Replay welcome
-  const replayWelcome = async () => {
-    if (isMuted || audioLoading) return;
-    
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    
-    setHasPlayed(false);
-    
-    const audioUrl = await generateSpeech(welcomeConfig.introMessage);
-    
-    if (audioUrl && audioRef.current) {
-      audioRef.current.src = audioUrl;
-      audioRef.current.onplay = () => setIsSpeaking(true);
-      audioRef.current.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-      };
-      audioRef.current.onerror = () => {
-        setIsSpeaking(false);
-        speakWithWebSpeech(welcomeConfig.introMessage);
-      };
-      
-      try {
-        await audioRef.current.play();
-      } catch (e) {
-        speakWithWebSpeech(welcomeConfig.introMessage);
-      }
-    } else {
-      speakWithWebSpeech(welcomeConfig.introMessage);
+  // Handle chat submit
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    if (chatInput.trim()) {
+      sendMessage(chatInput);
+      setChatInput('');
     }
   };
 
+  // Handle suggested question click
+  const handleSuggestionClick = (question) => {
+    sendMessage(question);
+  };
+
   // Handle waitlist submission
-  const handleSubmit = async (e) => {
+  const handleWaitlistSubmit = async (e) => {
     e.preventDefault();
     
     if (!email.trim()) {
@@ -202,7 +132,7 @@ const LandingPage = () => {
     try {
       await axios.post(`${API}/waitlist`, { email });
       setIsSubmitted(true);
-      toast.success("You're in. We'll reach out soon.");
+      toast.success("You're in! We'll reach out soon.");
     } catch (error) {
       if (error.response?.status === 400) {
         toast.info("You're already on the list.");
@@ -249,45 +179,104 @@ const LandingPage = () => {
         </nav>
       </header>
 
-      {/* Main Content - Centered */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-16">
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-8">
         {/* Liquid Orb */}
-        <div 
-          className="mb-12 cursor-pointer"
-          onClick={replayWelcome}
-          title="Click to hear Mia"
-        >
+        <div className="mb-6">
           <LiquidOrb isSpeaking={isSpeaking} />
         </div>
 
-        {/* Minimal Text */}
-        <div className="text-center max-w-md mx-auto mb-12">
-          <h1 
-            className="font-semibold mb-3"
-            style={{ 
-              color: '#ffffff',
-              fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-              lineHeight: '1.15',
-              letterSpacing: '-0.03em',
-            }}
-          >
-            {appInfo.tagline}
-          </h1>
-          <p 
-            style={{ 
-              color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
-              lineHeight: '1.5',
-            }}
-          >
-            {appInfo.description}
-          </p>
+        {/* Response Display - Shows what Mia is saying */}
+        <div className="text-center max-w-md mx-auto mb-6 min-h-[60px]">
+          {currentResponse ? (
+            <p 
+              className="text-base leading-relaxed animate-fade-in"
+              style={{ color: 'rgba(255, 255, 255, 0.8)' }}
+            >
+              "{currentResponse}"
+            </p>
+          ) : (
+            <>
+              <h1 
+                className="font-semibold mb-2"
+                style={{ 
+                  color: '#ffffff',
+                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  lineHeight: '1.2',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {appInfo.tagline}
+              </h1>
+              <p 
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  fontSize: '0.95rem',
+                }}
+              >
+                {appInfo.description}
+              </p>
+            </>
+          )}
         </div>
+
+        {/* Chat Input */}
+        <div className="w-full max-w-md mb-6">
+          <form onSubmit={handleChatSubmit} className="relative">
+            <Input
+              type="text"
+              placeholder="Ask Mia anything..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              disabled={isChatting}
+              className="h-12 pl-5 pr-12 rounded-full text-white placeholder:text-white/30 transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isChatting || !chatInput.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all hover:bg-white/10 disabled:opacity-30"
+            >
+              {isChatting ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Send size={18} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+              )}
+            </button>
+          </form>
+          
+          {/* Suggested Questions */}
+          <div className="flex flex-wrap justify-center gap-2 mt-3">
+            {suggestedQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handleSuggestionClick(question)}
+                disabled={isChatting}
+                className="px-3 py-1.5 text-xs rounded-full transition-all hover:bg-white/10 disabled:opacity-30"
+                style={{
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div 
+          className="w-full max-w-xs h-px mb-6"
+          style={{ background: 'rgba(255, 255, 255, 0.08)' }}
+        />
 
         {/* Waitlist Form */}
         <div className="w-full max-w-sm">
           {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <form onSubmit={handleWaitlistSubmit} className="flex flex-col gap-3">
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -346,7 +335,7 @@ const LandingPage = () => {
       </main>
 
       {/* Minimal Footer */}
-      <footer className="py-6 px-6 text-center">
+      <footer className="py-4 px-6 text-center">
         <p 
           className="text-xs"
           style={{ color: 'rgba(255, 255, 255, 0.2)' }}
