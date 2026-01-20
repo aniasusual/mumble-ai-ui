@@ -16,85 +16,67 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
   }, [handleMouseMove]);
   
   // Calculate subtle offset based on mouse position
-  const offsetX = (mousePosition.x - 0.5) * 20;
-  const offsetY = (mousePosition.y - 0.5) * 20;
+  const offsetX = (mousePosition.x - 0.5) * 15;
+  const offsetY = (mousePosition.y - 0.5) * 15;
   
   return (
     <div className={`relative ${className}`}>
-      {/* Glow effect behind orb */}
+      {/* Glow effect behind orb - subtle on dark background */}
       <div 
         className="absolute inset-0 orb-glow"
         style={{
-          background: 'radial-gradient(circle, rgba(143, 236, 120, 0.4) 0%, rgba(74, 144, 217, 0.3) 40%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(143, 236, 120, 0.25) 0%, rgba(74, 144, 217, 0.15) 40%, transparent 70%)',
           transform: `translate(${offsetX * 0.5}px, ${offsetY * 0.5}px)`,
-          transition: 'transform 0.3s ease-out',
+          transition: 'transform 0.4s ease-out',
         }}
       />
       
-      {/* Ripple effects */}
+      {/* Ripple effects when speaking */}
       {isSpeaking && (
         <>
           <div 
-            className="absolute inset-0 ripple-effect rounded-full"
+            className="absolute inset-0 rounded-full"
             style={{
-              background: 'radial-gradient(circle, transparent 50%, rgba(143, 236, 120, 0.2) 70%, transparent 80%)',
-              animationDelay: '0s',
+              background: 'radial-gradient(circle, transparent 40%, rgba(143, 236, 120, 0.15) 60%, transparent 70%)',
+              animation: 'pulse 1.5s ease-in-out infinite',
             }}
           />
           <div 
-            className="absolute inset-0 ripple-effect rounded-full"
+            className="absolute inset-0 rounded-full"
             style={{
-              background: 'radial-gradient(circle, transparent 50%, rgba(74, 144, 217, 0.2) 70%, transparent 80%)',
-              animationDelay: '0.5s',
-            }}
-          />
-          <div 
-            className="absolute inset-0 ripple-effect rounded-full"
-            style={{
-              background: 'radial-gradient(circle, transparent 50%, rgba(34, 211, 238, 0.15) 70%, transparent 80%)',
-              animationDelay: '1s',
+              background: 'radial-gradient(circle, transparent 40%, rgba(74, 144, 217, 0.1) 60%, transparent 70%)',
+              animation: 'pulse 1.5s ease-in-out infinite 0.5s',
             }}
           />
         </>
       )}
       
-      {/* Main liquid orb */}
+      {/* Main liquid orb - darker, more subtle */}
       <div 
-        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-48 h-48 md:w-64 md:h-64`}
+        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-40 h-40 md:w-52 md:h-52`}
         style={{
           background: `
-            radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 30%),
-            radial-gradient(circle at 70% 70%, rgba(74, 144, 217, 0.6) 0%, transparent 40%),
-            radial-gradient(circle at 50% 50%, rgba(143, 236, 120, 0.9) 0%, rgba(129, 221, 103, 0.8) 40%, rgba(74, 144, 217, 0.7) 80%)
+            radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 25%),
+            radial-gradient(circle at 70% 70%, rgba(74, 144, 217, 0.4) 0%, transparent 35%),
+            radial-gradient(circle at 50% 50%, rgba(143, 236, 120, 0.7) 0%, rgba(129, 221, 103, 0.5) 40%, rgba(74, 144, 217, 0.4) 80%)
           `,
           boxShadow: `
-            0 0 60px rgba(143, 236, 120, 0.5),
-            0 0 120px rgba(74, 144, 217, 0.3),
-            inset 0 0 60px rgba(255, 255, 255, 0.2),
-            inset 0 0 30px rgba(143, 236, 120, 0.3)
+            0 0 80px rgba(143, 236, 120, 0.3),
+            0 0 150px rgba(74, 144, 217, 0.15),
+            inset 0 0 40px rgba(255, 255, 255, 0.1),
+            inset 0 0 20px rgba(143, 236, 120, 0.2)
           `,
           transform: `translate(${offsetX}px, ${offsetY}px)`,
-          transition: 'transform 0.3s ease-out',
+          transition: 'transform 0.4s ease-out',
         }}
       >
         {/* Inner highlight */}
         <div 
-          className="absolute w-12 h-8 md:w-16 md:h-10 rounded-full opacity-60"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, transparent 60%)',
-            top: '20%',
-            left: '15%',
-            transform: 'rotate(-25deg)',
-          }}
-        />
-        
-        {/* Secondary highlight */}
-        <div 
-          className="absolute w-6 h-4 md:w-8 md:h-6 rounded-full opacity-40"
+          className="absolute w-10 h-6 md:w-12 md:h-8 rounded-full opacity-40"
           style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, transparent 60%)',
-            bottom: '25%',
-            right: '20%',
+            top: '18%',
+            left: '15%',
             transform: 'rotate(-25deg)',
           }}
         />
