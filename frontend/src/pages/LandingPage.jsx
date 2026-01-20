@@ -29,7 +29,60 @@ const LandingPage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasIntroduced, setHasIntroduced] = useState(false);
   
+  // Voice input states
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  
   const audioRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      setSpeechSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        
+        setChatInput(transcript);
+        
+        // If it's a final result, send the message
+        if (event.results[0].isFinal) {
+          setIsListening(false);
+        }
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          toast.error('Microphone access denied. Please allow microphone access.');
+        } else if (event.error !== 'aborted') {
+          toast.error('Voice input error. Try again.');
+        }
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = recognition;
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
 
   // Play audio from base64
   const playAudioFromBase64 = useCallback((base64Audio) => {
@@ -53,6 +106,7 @@ const LandingPage = () => {
     
     setIsChatting(true);
     setCurrentResponse('');
+    setChatInput(''); // Clear input after sending
     
     try {
       const response = await axios.post(`${API}/chat-voice`, {
@@ -98,12 +152,47 @@ const LandingPage = () => {
     setIsMuted(!isMuted);
   };
 
+  // Toggle voice input
+  const toggleListening = () => {
+    if (!speechSupported) {
+      toast.error('Voice input not supported in this browser');
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      // Stop any playing audio first
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+        setIsSpeaking(false);
+      }
+      
+      setChatInput('');
+      setIsListening(true);
+      
+      try {
+        recognitionRef.current?.start();
+      } catch (e) {
+        console.error('Failed to start recognition:', e);
+        setIsListening(false);
+      }
+    }
+  };
+
+  // Send message when user stops speaking
+  const handleVoiceSend = () => {
+    if (chatInput.trim() && !isChatting) {
+      sendMessage(chatInput);
+    }
+  };
+
   // Handle chat submit
   const handleChatSubmit = (e) => {
     e.preventDefault();
     if (chatInput.trim()) {
       sendMessage(chatInput);
-      setChatInput('');
     }
   };
 
@@ -183,14 +272,21 @@ const LandingPage = () => {
       <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-8">
         {/* Liquid Orb */}
         <div className="mb-6">
-          <LiquidOrb isSpeaking={isSpeaking} />
+          <LiquidOrb isSpeaking={isSpeaking || isListening} />
         </div>
 
-        {/* Response Display - Shows what Mia is saying */}
+        {/* Response Display - Shows what Mia is saying or listening indicator */}
         <div className="text-center max-w-md mx-auto mb-6 min-h-[60px]">
-          {currentResponse ? (
+          {isListening ? (
             <p 
-              className="text-base leading-relaxed animate-fade-in"
+              className="text-base leading-relaxed animate-pulse"
+              style={{ color: 'rgba(143, 236, 120, 0.8)' }}
+            >
+              {chatInput || "Listening..."}
+            </p>
+          ) : currentResponse ? (
+            <p 
+              className="text-base leading-relaxed"
               style={{ color: 'rgba(255, 255, 255, 0.8)' }}
             >
               "{currentResponse}"
@@ -220,32 +316,60 @@ const LandingPage = () => {
           )}
         </div>
 
-        {/* Chat Input */}
+        {/* Chat Input with Mic Button */}
         <div className="w-full max-w-md mb-6">
-          <form onSubmit={handleChatSubmit} className="relative">
-            <Input
-              type="text"
-              placeholder="Ask Mia anything..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
+          <form onSubmit={handleChatSubmit} className="relative flex gap-2">
+            {/* Microphone Button */}
+            <button
+              type="button"
+              onClick={isListening ? handleVoiceSend : toggleListening}
               disabled={isChatting}
-              className="h-12 pl-5 pr-12 rounded-full text-white placeholder:text-white/30 transition-all"
+              className={`h-12 w-12 flex-shrink-0 rounded-full flex items-center justify-center transition-all ${
+                isListening 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'hover:bg-white/10'
+              } disabled:opacity-30`}
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
+                background: isListening ? '#8FEC78' : 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
-            />
-            <button
-              type="submit"
-              disabled={isChatting || !chatInput.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all hover:bg-white/10 disabled:opacity-30"
+              title={isListening ? 'Send voice message' : 'Start voice input'}
             >
-              {isChatting ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              {isListening ? (
+                <Send size={18} style={{ color: '#000' }} />
               ) : (
-                <Send size={18} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                <Mic size={18} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
               )}
             </button>
+            
+            {/* Text Input */}
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder={isListening ? "Listening..." : "Ask Mia anything..."}
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                disabled={isChatting || isListening}
+                className="h-12 pl-5 pr-12 rounded-full text-white placeholder:text-white/30 transition-all"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: isListening 
+                    ? '1px solid rgba(143, 236, 120, 0.5)' 
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isChatting || !chatInput.trim() || isListening}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all hover:bg-white/10 disabled:opacity-30"
+              >
+                {isChatting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send size={18} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                )}
+              </button>
+            </div>
           </form>
           
           {/* Suggested Questions */}
@@ -254,7 +378,7 @@ const LandingPage = () => {
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(question)}
-                disabled={isChatting}
+                disabled={isChatting || isListening}
                 className="px-3 py-1.5 text-xs rounded-full transition-all hover:bg-white/10 disabled:opacity-30"
                 style={{
                   color: 'rgba(255, 255, 255, 0.5)',
