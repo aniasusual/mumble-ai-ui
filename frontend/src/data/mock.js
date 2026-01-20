@@ -12,7 +12,7 @@ export const miaConfig = {
 
 // App information - minimalistic
 export const appInfo = {
-  name: "mumble AI",
+  name: "mumble",
   tagline: "Learn languages naturally",
   description: "Your AI tutor. From first words to fluent conversations.",
 };
