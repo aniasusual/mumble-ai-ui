@@ -132,9 +132,9 @@ const LandingPage = () => {
     }
   }, [isChatting, sessionId, playAudioFromBase64]);
 
-  // Auto-introduce on first render
+  // Trigger intro after user clicks "Enter" button
   useEffect(() => {
-    setIsLoaded(true);
+    if (!hasEntered) return;
     
     // Prevent double call in strict mode
     if (introCalledRef.current) return;
@@ -154,7 +154,7 @@ const LandingPage = () => {
         setCurrentResponse(response.data.response);
         setSessionId(response.data.session_id);
         
-        // Play intro audio
+        // Play intro audio - will work because user already interacted
         if (response.data.audio && audioRef.current) {
           const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
           audioRef.current.src = audioSrc;
@@ -165,8 +165,7 @@ const LandingPage = () => {
           try {
             await audioRef.current.play();
           } catch (e) {
-            console.log('Auto-play blocked:', e.message);
-            // Audio blocked, but text still shows
+            console.log('Audio play error:', e.message);
           }
         }
       } catch (error) {
@@ -176,9 +175,14 @@ const LandingPage = () => {
       }
     };
     
-    // Start intro immediately
-    introduceAI();
-  }, [sessionId]);
+    // Start intro after a small delay to ensure smooth transition
+    setTimeout(introduceAI, 300);
+  }, [hasEntered, sessionId]);
+
+  // Set loaded state
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   // Toggle mute
   const toggleMute = () => {
