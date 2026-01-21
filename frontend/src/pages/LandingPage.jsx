@@ -509,6 +509,7 @@ const LandingPage = () => {
               </span>
             </div>
           )}
+          </div>
         </div>
       </main>
 
