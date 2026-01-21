@@ -430,16 +430,24 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* Waitlist Section - Glass Card */}
-        <div 
-          className="w-full max-w-lg p-6 rounded-2xl"
-          style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-          }}
-        >
+        {/* Waitlist Section - Glass Card with Gradient Glow */}
+        <div className="relative w-full max-w-lg">
+          {/* Gradient glow behind the card */}
+          <div 
+            className="absolute -inset-1 rounded-3xl opacity-60 blur-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.3) 0%, rgba(74, 144, 217, 0.2) 50%, rgba(143, 236, 120, 0.15) 100%)',
+            }}
+          />
+          <div 
+            className="relative p-6 rounded-2xl"
+            style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
           {!isSubmitted ? (
             <>
               <p 
