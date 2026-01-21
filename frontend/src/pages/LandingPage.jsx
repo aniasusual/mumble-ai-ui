@@ -430,59 +430,66 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* Divider */}
+        {/* Waitlist Section - Glass Card */}
         <div 
-          className="w-full max-w-xs h-px mb-6"
-          style={{ background: 'rgba(255, 255, 255, 0.08)' }}
-        />
-
-        {/* Waitlist Form */}
-        <div className="w-full max-w-sm">
+          className="w-full max-w-lg p-6 rounded-2xl"
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+          }}
+        >
           {!isSubmitted ? (
-            <form onSubmit={handleWaitlistSubmit} className="flex flex-col gap-3">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-                className="h-12 px-5 rounded-full text-white placeholder:text-white/30 transition-all"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              />
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-12 px-6 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  background: '#ffffff',
-                  color: '#000000',
-                  border: 'none',
+            <>
+              <p 
+                className="text-center mb-4 font-medium"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: '0.95rem',
                 }}
               >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                    Joining...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    Join waitlist
-                    <ArrowRight size={16} />
-                  </span>
-                )}
-              </Button>
-            </form>
+                Be first to learn with Mia
+              </p>
+              <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  className="flex-1 h-11 px-4 rounded-full text-white placeholder:text-white/30 transition-all text-sm"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                />
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-11 px-5 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98] text-sm whitespace-nowrap"
+                  style={{
+                    background: '#ffffff',
+                    color: '#000000',
+                    border: 'none',
+                  }}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                      Joining...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Join waitlist
+                      <ArrowRight size={14} />
+                    </span>
+                  )}
+                </Button>
+              </form>
+            </>
           ) : (
-            <div 
-              className="flex items-center justify-center gap-3 py-4 px-6 rounded-full"
-              style={{
-                background: 'rgba(143, 236, 120, 0.1)',
-                border: '1px solid rgba(143, 236, 120, 0.2)',
-              }}
-            >
+            <div className="flex items-center justify-center gap-3 py-2">
               <div 
                 className="w-6 h-6 rounded-full flex items-center justify-center"
                 style={{ background: '#8FEC78' }}
