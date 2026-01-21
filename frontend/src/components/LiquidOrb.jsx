@@ -145,8 +145,9 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
       
       {/* Main liquid orb */}
       <div 
-        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-40 h-40 md:w-52 md:h-52 rounded-full`}
+        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-40 h-40 md:w-52 md:h-52`}
         style={{
+          borderRadius: isSpeaking ? '50%' : undefined,
           background: isSpeaking 
             ? `
               radial-gradient(circle at 30% 30%, rgba(255, 255, 255, ${0.15 + audioLevel * 0.1}) 0%, transparent 25%),
@@ -172,7 +173,9 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
               inset 0 0 20px rgba(143, 236, 120, 0.2)
             `,
           transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
-          transition: isSpeaking ? 'transform 0.1s ease-out, box-shadow 0.1s ease-out' : 'transform 0.4s ease-out',
+          transition: isSpeaking 
+            ? 'transform 0.1s ease-out, box-shadow 0.1s ease-out, border-radius 0.3s ease-out' 
+            : 'transform 0.4s ease-out, border-radius 0.5s ease-out',
         }}
       >
         {/* Inner highlight - static when idle, moves when speaking */}
