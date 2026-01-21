@@ -17,7 +17,7 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [handleMouseMove]);
   
-  // Simulate audio-reactive animation when speaking
+  // Simulate audio-reactive animation ONLY when speaking
   useEffect(() => {
     if (isSpeaking) {
       const animateLevel = () => {
@@ -33,6 +33,7 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
       };
       animateLevel();
     } else {
+      // Reset to static state
       setAudioLevel(0);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -50,20 +51,20 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
   const offsetX = (mousePosition.x - 0.5) * 15;
   const offsetY = (mousePosition.y - 0.5) * 15;
   
-  // Dynamic values based on audio level
+  // Dynamic values - only apply when speaking
   const scale = isSpeaking ? 1 + audioLevel * 0.15 : 1;
-  const glowIntensity = isSpeaking ? 0.4 + audioLevel * 0.4 : 0.25;
   const pulseScale = 1 + audioLevel * 0.3;
   
   return (
     <div 
       className={`relative ${className}`}
       style={{
-        padding: '60px',
-        margin: '-60px',
+        padding: isSpeaking ? '60px' : '40px',
+        margin: isSpeaking ? '-60px' : '-40px',
+        transition: 'padding 0.3s ease-out, margin 0.3s ease-out',
       }}
     >
-      {/* Outer ripple rings when speaking */}
+      {/* === SPEAKING ONLY: Outer ripple rings === */}
       {isSpeaking && (
         <>
           <div 
@@ -108,21 +109,25 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
         </>
       )}
       
-      {/* Dynamic glow effect - intensifies when speaking */}
+      {/* Glow effect - static when idle, dynamic when speaking */}
       <div 
-        className="absolute"
+        className="absolute orb-glow"
         style={{
           top: '0',
           left: '0',
           right: '0',
           bottom: '0',
-          background: `radial-gradient(circle, rgba(143, 236, 120, ${glowIntensity}) 0%, rgba(74, 144, 217, ${glowIntensity * 0.6}) 40%, transparent 70%)`,
-          transform: `translate(${offsetX * 0.5}px, ${offsetY * 0.5}px) scale(${pulseScale})`,
-          transition: 'transform 0.1s ease-out, background 0.1s ease-out',
+          background: isSpeaking
+            ? `radial-gradient(circle, rgba(143, 236, 120, ${0.4 + audioLevel * 0.4}) 0%, rgba(74, 144, 217, ${0.24 + audioLevel * 0.24}) 40%, transparent 70%)`
+            : 'radial-gradient(circle, rgba(143, 236, 120, 0.25) 0%, rgba(74, 144, 217, 0.15) 40%, transparent 70%)',
+          transform: isSpeaking 
+            ? `translate(${offsetX * 0.5}px, ${offsetY * 0.5}px) scale(${pulseScale})`
+            : `translate(${offsetX * 0.5}px, ${offsetY * 0.5}px)`,
+          transition: isSpeaking ? 'transform 0.1s ease-out' : 'transform 0.4s ease-out',
         }}
       />
       
-      {/* Pulsing aura when speaking */}
+      {/* === SPEAKING ONLY: Pulsing aura === */}
       {isSpeaking && (
         <div 
           className="absolute rounded-full"
@@ -140,7 +145,7 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
       
       {/* Main liquid orb */}
       <div 
-        className="relative w-40 h-40 md:w-52 md:h-52 rounded-full"
+        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-40 h-40 md:w-52 md:h-52 rounded-full`}
         style={{
           background: isSpeaking 
             ? `
@@ -167,23 +172,23 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
               inset 0 0 20px rgba(143, 236, 120, 0.2)
             `,
           transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
-          transition: 'transform 0.1s ease-out, box-shadow 0.1s ease-out',
+          transition: isSpeaking ? 'transform 0.1s ease-out, box-shadow 0.1s ease-out' : 'transform 0.4s ease-out',
         }}
       >
-        {/* Inner highlight - moves slightly when speaking */}
+        {/* Inner highlight - static when idle, moves when speaking */}
         <div 
-          className="absolute w-10 h-6 md:w-12 md:h-8 rounded-full"
+          className="absolute w-10 h-6 md:w-12 md:h-8 rounded-full opacity-40"
           style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, transparent 60%)',
-            top: `${18 - audioLevel * 3}%`,
-            left: `${15 + audioLevel * 2}%`,
-            transform: `rotate(${-25 + audioLevel * 10}deg)`,
-            opacity: 0.4 + audioLevel * 0.2,
-            transition: 'all 0.1s ease-out',
+            top: isSpeaking ? `${18 - audioLevel * 3}%` : '18%',
+            left: isSpeaking ? `${15 + audioLevel * 2}%` : '15%',
+            transform: `rotate(${isSpeaking ? -25 + audioLevel * 10 : -25}deg)`,
+            opacity: isSpeaking ? 0.4 + audioLevel * 0.2 : 0.4,
+            transition: isSpeaking ? 'all 0.1s ease-out' : 'none',
           }}
         />
         
-        {/* Secondary highlight that appears when speaking */}
+        {/* === SPEAKING ONLY: Secondary highlight === */}
         {isSpeaking && (
           <div 
             className="absolute w-6 h-4 md:w-8 md:h-5 rounded-full"
@@ -198,7 +203,7 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
           />
         )}
         
-        {/* Center glow pulse when speaking */}
+        {/* === SPEAKING ONLY: Center glow pulse === */}
         {isSpeaking && (
           <div 
             className="absolute inset-0 rounded-full"
@@ -210,7 +215,7 @@ const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
         )}
       </div>
       
-      {/* Sound wave indicators around orb when speaking */}
+      {/* === SPEAKING ONLY: Sound wave indicators === */}
       {isSpeaking && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {[...Array(8)].map((_, i) => (
