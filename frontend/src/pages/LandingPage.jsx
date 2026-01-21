@@ -273,6 +273,84 @@ const LandingPage = () => {
     }
   };
 
+  // Handle entering the experience
+  const handleEnter = () => {
+    setHasEntered(true);
+  };
+
+  // Entry Gate Screen - minimal and elegant
+  if (!hasEntered) {
+    return (
+      <div 
+        className={`min-h-screen flex flex-col items-center justify-center transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        style={{ background: '#000000' }}
+      >
+        {/* Subtle background glow */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(143, 236, 120, 0.08) 0%, transparent 50%)',
+          }}
+        />
+        
+        {/* Logo and brand */}
+        <div className="flex items-center gap-3 mb-8">
+          <MumbleLogo size={48} color="#ffffff" />
+          <span 
+            className="font-medium text-2xl tracking-tight"
+            style={{ color: 'rgba(255, 255, 255, 0.9)' }}
+          >
+            {appInfo.name}
+          </span>
+        </div>
+        
+        {/* Tagline */}
+        <h1 
+          className="text-center mb-3 font-semibold"
+          style={{ 
+            color: '#ffffff',
+            fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+            lineHeight: '1.2',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          {appInfo.tagline}
+        </h1>
+        
+        <p 
+          className="text-center mb-10 max-w-md px-6"
+          style={{ 
+            color: 'rgba(255, 255, 255, 0.5)',
+            fontSize: '1rem',
+          }}
+        >
+          Meet Mia, your AI language tutor
+        </p>
+        
+        {/* Enter button */}
+        <button
+          onClick={handleEnter}
+          className="group relative flex items-center gap-3 px-8 py-4 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
+          style={{
+            background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.9) 0%, rgba(100, 200, 80, 0.9) 100%)',
+            color: '#000000',
+            boxShadow: '0 0 40px rgba(143, 236, 120, 0.3), 0 0 80px rgba(143, 236, 120, 0.15)',
+          }}
+        >
+          <Play size={20} fill="#000" />
+          <span>Start Experience</span>
+        </button>
+        
+        <p 
+          className="mt-6 text-xs"
+          style={{ color: 'rgba(255, 255, 255, 0.3)' }}
+        >
+          Click to enable audio
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div 
       className={`min-h-screen flex flex-col transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
