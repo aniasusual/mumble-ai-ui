@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import LiquidOrb from '../components/LiquidOrb';
 import MumbleLogo from '../components/MumbleLogo';
 import { miaConfig, appInfo, suggestedQuestions } from '../data/mock';
-import { ArrowRight, Send, Mic, Volume2, VolumeX, Check } from 'lucide-react';
+import { ArrowRight, Send, Mic, Volume2, VolumeX, Check, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -12,6 +12,9 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const LandingPage = () => {
+  // Entry gate state - user must click to enable audio
+  const [hasEntered, setHasEntered] = useState(false);
+  
   // Form states
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
