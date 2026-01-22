@@ -508,18 +508,38 @@ const LandingPage = () => {
             </div>
           </form>
           
-          {/* Suggested Questions - Horizontal scroll */}
-          <div className="w-full overflow-x-auto scrollbar-hide mt-3 -mx-2 px-2">
-            <div className="flex gap-2 pb-2 min-w-max justify-start md:justify-center md:flex-wrap">
+          {/* Suggested Questions - Engaging chips */}
+          <div className="w-full mt-4">
+            <p 
+              className="text-center text-xs mb-3"
+              style={{ color: 'rgba(255, 255, 255, 0.3)' }}
+            >
+              Ask Mia
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
               {suggestedQuestions.map((question, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(question)}
                   disabled={isChatting || isListening}
-                  className="px-3 py-1.5 text-xs rounded-full transition-all hover:bg-white/10 hover:border-white/20 disabled:opacity-30 whitespace-nowrap flex-shrink-0"
+                  className="group px-4 py-2 text-sm rounded-full transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-30"
                   style={{
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: 'rgba(255, 255, 255, 0.75)',
+                    background: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 0 0 rgba(143, 236, 120, 0)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(143, 236, 120, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(143, 236, 120, 0.3)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(143, 236, 120, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
+                    e.currentTarget.style.boxShadow = '0 0 0 rgba(143, 236, 120, 0)';
                   }}
                 >
                   {question}
