@@ -17,14 +17,12 @@ export const appInfo = {
   description: "Your AI tutor. From first words to fluent conversations.",
 };
 
-// Suggested questions for users - Product journey & value proposition
+// Suggested questions for users - Curiosity-driven, conversion-focused
 export const suggestedQuestions = [
-  "How does learning with Mia work?",
-  "Walk me through a typical lesson",
-  "How do you track my progress?",
-  "How do you adapt to my level?",
-  "Will you remember what I struggle with?",
-  "Why is this better than other language learning apps?",
-  "How fast can I become conversational?",
-  "What languages do you support?",
+  "Why will this actually work?",
+  "Show me a lesson",
+  "How do you know what I need?",
+  "Why not just use Duolingo?",
+  "How fast can I get fluent?",
+  "What languages?",
 ];
