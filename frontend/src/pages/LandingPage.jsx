@@ -508,35 +508,35 @@ const LandingPage = () => {
             </div>
           </form>
           
-          {/* Suggested Questions - Engaging chips */}
-          <div className="w-full mt-4">
+          {/* Suggested Questions - Organic scattered layout */}
+          <div className="w-full mt-4 max-w-lg mx-auto">
             <p 
               className="text-center text-xs mb-3"
               style={{ color: 'rgba(255, 255, 255, 0.3)' }}
             >
               Ask Mia
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-2">
               {suggestedQuestions.map((question, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(question)}
                   disabled={isChatting || isListening}
-                  className="group px-3 py-2 text-xs rounded-full transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-30 text-center"
+                  className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
                   style={{
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(143, 236, 120, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(143, 236, 120, 0.3)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
                   }}
                 >
                   {question}
