@@ -508,7 +508,7 @@ const LandingPage = () => {
             </div>
           </form>
           
-          {/* Suggested Questions - Random scattered layout */}
+          {/* Suggested Questions */}
           <div className="w-full mt-3 max-w-lg mx-auto">
             <p 
               className="text-center text-xs mb-3"
@@ -516,41 +516,32 @@ const LandingPage = () => {
             >
               Ask Mia
             </p>
-            <div className="flex flex-wrap justify-center" style={{ gap: '8px 10px' }}>
-              {suggestedQuestions.map((question, index) => {
-                // Staggered vertical positions for scattered look
-                const yOffsets = [0, 5, -3, 7, -1, 4];
-                const rotations = [-1, 0.5, -0.5, 1, 0, -0.8];
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(question)}
-                    disabled={isChatting || isListening}
-                    className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
-                    style={{
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      background: 'transparent',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      transform: `translateY(${yOffsets[index]}px) rotate(${rotations[index]}deg)`,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
-                      e.currentTarget.style.transform = `translateY(${yOffsets[index]}px) rotate(0deg) scale(1.05)`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
-                      e.currentTarget.style.transform = `translateY(${yOffsets[index]}px) rotate(${rotations[index]}deg)`;
-                    }}
-                  >
-                    {question}
-                  </button>
-                );
-              })}
+            <div className="flex flex-wrap justify-center gap-2">
+              {suggestedQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSuggestionClick(question)}
+                  disabled={isChatting || isListening}
+                  className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
+                  }}
+                >
+                  {question}
+                </button>
+              ))}
             </div>
           </div>
         </div>
