@@ -327,25 +327,25 @@ const LandingPage = () => {
           Meet Mia, your AI language tutor
         </p>
         
-        {/* Enter button */}
+        {/* Enter button - minimalistic */}
         <button
           onClick={handleEnter}
-          className="group relative flex items-center gap-3 px-8 py-4 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
+          className="group flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:bg-white/10 active:scale-95"
           style={{
-            background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.9) 0%, rgba(100, 200, 80, 0.9) 100%)',
-            color: '#000000',
-            boxShadow: '0 0 40px rgba(143, 236, 120, 0.3), 0 0 80px rgba(143, 236, 120, 0.15)',
+            background: 'transparent',
+            color: 'rgba(255, 255, 255, 0.8)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
           }}
         >
-          <Play size={20} fill="#000" />
-          <span>Start Experience</span>
+          <Play size={16} fill="rgba(255, 255, 255, 0.8)" />
+          <span>Enter</span>
         </button>
         
         <p 
-          className="mt-6 text-xs"
-          style={{ color: 'rgba(255, 255, 255, 0.3)' }}
+          className="mt-4 text-xs"
+          style={{ color: 'rgba(255, 255, 255, 0.25)' }}
         >
-          Click to enable audio
+          tap to enable audio
         </p>
       </div>
     );
