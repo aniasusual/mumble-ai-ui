@@ -509,40 +509,36 @@ const LandingPage = () => {
           </form>
           
           {/* Suggested Questions - Random scattered layout */}
-          <div className="w-full mt-4 max-w-2xl mx-auto px-4">
+          <div className="w-full mt-4 max-w-xl mx-auto px-4">
             <p 
               className="text-center text-xs mb-4"
               style={{ color: 'rgba(255, 255, 255, 0.3)' }}
             >
               Ask Mia
             </p>
-            <div className="flex flex-wrap justify-center items-center">
+            <div className="relative flex flex-wrap justify-center gap-x-3 gap-y-2">
               {suggestedQuestions.map((question, index) => {
-                // Random-ish offsets for organic feel
-                const offsets = [
-                  { mt: '0', mb: '8px', mx: '4px' },
-                  { mt: '12px', mb: '0', mx: '6px' },
-                  { mt: '4px', mb: '4px', mx: '3px' },
-                  { mt: '8px', mb: '6px', mx: '5px' },
-                  { mt: '2px', mb: '10px', mx: '4px' },
-                  { mt: '10px', mb: '2px', mx: '6px' },
+                // Varying vertical offsets for organic scattered look
+                const transforms = [
+                  'translateY(0px)',
+                  'translateY(6px)',
+                  'translateY(-4px)',
+                  'translateY(8px)',
+                  'translateY(-2px)',
+                  'translateY(4px)',
                 ];
-                const offset = offsets[index % offsets.length];
                 
                 return (
                   <button
                     key={index}
                     onClick={() => handleSuggestionClick(question)}
                     disabled={isChatting || isListening}
-                    className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+                    className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 whitespace-nowrap"
                     style={{
                       color: 'rgba(255, 255, 255, 0.55)',
                       background: 'transparent',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
-                      marginTop: offset.mt,
-                      marginBottom: offset.mb,
-                      marginLeft: offset.mx,
-                      marginRight: offset.mx,
+                      transform: transforms[index % transforms.length],
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
