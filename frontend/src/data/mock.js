@@ -17,12 +17,12 @@ export const appInfo = {
   description: "Your AI tutor. From first words to fluent conversations.",
 };
 
-// Suggested questions for users - Curiosity-driven, conversion-focused
+// Suggested questions for users - Clear, specific, conversion-focused
 export const suggestedQuestions = [
-  "Why will this actually work?",
-  "Show me a lesson",
-  "How do you know what I need?",
-  "Why not just use Duolingo?",
-  "How fast can I get fluent?",
-  "What languages?",
+  "How does learning with Mia work?",
+  "What does a lesson look like?",
+  "How do you personalize my learning?",
+  "What makes this better than Duolingo?",
+  "How long until I'm conversational?",
+  "Which languages can I learn?",
 ];
