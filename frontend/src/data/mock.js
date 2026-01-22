@@ -22,7 +22,7 @@ export const suggestedQuestions = [
   "How does learning with Mia work?",
   "What does a lesson look like?",
   "How do you personalize my learning?",
-  "What makes this better than Duolingo?",
+  "What makes this better than other apps?",
   "How long until I'm conversational?",
   "Which languages can I learn?",
 ];
