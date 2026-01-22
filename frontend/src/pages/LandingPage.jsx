@@ -327,19 +327,31 @@ const LandingPage = () => {
           Meet Mia, your AI language tutor
         </p>
         
-        {/* Enter button - minimalistic */}
-        <button
-          onClick={handleEnter}
-          className="group flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:bg-white/10 active:scale-95"
-          style={{
-            background: 'transparent',
-            color: 'rgba(255, 255, 255, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-          }}
-        >
-          <Play size={16} fill="rgba(255, 255, 255, 0.8)" />
-          <span>Enter</span>
-        </button>
+        {/* Enter button - minimalistic with subtle attention effect */}
+        <div className="relative">
+          {/* Subtle pulsing glow behind button */}
+          <div 
+            className="absolute inset-0 rounded-full opacity-60"
+            style={{
+              background: 'radial-gradient(circle, rgba(143, 236, 120, 0.3) 0%, transparent 70%)',
+              filter: 'blur(20px)',
+              animation: 'pulse 2.5s ease-in-out infinite',
+            }}
+          />
+          <button
+            onClick={handleEnter}
+            className="relative flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              color: 'rgba(255, 255, 255, 0.9)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 0 20px rgba(143, 236, 120, 0.1)',
+            }}
+          >
+            <Play size={16} fill="rgba(255, 255, 255, 0.9)" />
+            <span>Enter</span>
+          </button>
+        </div>
         
         <p 
           className="mt-4 text-xs"
