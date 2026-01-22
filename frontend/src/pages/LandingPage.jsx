@@ -508,22 +508,24 @@ const LandingPage = () => {
             </div>
           </form>
           
-          {/* Suggested Questions */}
-          <div className="flex flex-wrap justify-center gap-2 mt-3">
-            {suggestedQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestionClick(question)}
-                disabled={isChatting || isListening}
-                className="px-3 py-1.5 text-xs rounded-full transition-all hover:bg-white/10 disabled:opacity-30"
-                style={{
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              >
-                {question}
-              </button>
-            ))}
+          {/* Suggested Questions - Horizontal scroll */}
+          <div className="w-full overflow-x-auto scrollbar-hide mt-3 -mx-2 px-2">
+            <div className="flex gap-2 pb-2 min-w-max justify-start md:justify-center md:flex-wrap">
+              {suggestedQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSuggestionClick(question)}
+                  disabled={isChatting || isListening}
+                  className="px-3 py-1.5 text-xs rounded-full transition-all hover:bg-white/10 hover:border-white/20 disabled:opacity-30 whitespace-nowrap flex-shrink-0"
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
