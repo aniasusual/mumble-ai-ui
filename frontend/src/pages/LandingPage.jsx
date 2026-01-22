@@ -516,30 +516,27 @@ const LandingPage = () => {
             >
               Ask Mia
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-xl mx-auto">
               {suggestedQuestions.map((question, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(question)}
                   disabled={isChatting || isListening}
-                  className="group px-4 py-2 text-sm rounded-full transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-30"
+                  className="group px-3 py-2 text-xs rounded-full transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-30 text-center"
                   style={{
-                    color: 'rgba(255, 255, 255, 0.75)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     background: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 0 0 rgba(143, 236, 120, 0)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'rgba(143, 236, 120, 0.1)';
                     e.currentTarget.style.borderColor = 'rgba(143, 236, 120, 0.3)';
                     e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
-                    e.currentTarget.style.boxShadow = '0 0 20px rgba(143, 236, 120, 0.15)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
                     e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
-                    e.currentTarget.style.boxShadow = '0 0 0 rgba(143, 236, 120, 0)';
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
                   }}
                 >
                   {question}
