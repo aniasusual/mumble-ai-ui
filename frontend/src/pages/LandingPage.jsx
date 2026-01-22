@@ -508,40 +508,57 @@ const LandingPage = () => {
             </div>
           </form>
           
-          {/* Suggested Questions - Organic scattered layout */}
-          <div className="w-full mt-4 max-w-lg mx-auto">
+          {/* Suggested Questions - Random scattered layout */}
+          <div className="w-full mt-4 max-w-2xl mx-auto px-4">
             <p 
-              className="text-center text-xs mb-3"
+              className="text-center text-xs mb-4"
               style={{ color: 'rgba(255, 255, 255, 0.3)' }}
             >
               Ask Mia
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {suggestedQuestions.map((question, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSuggestionClick(question)}
-                  disabled={isChatting || isListening}
-                  className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
-                  style={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    background: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
-                  }}
-                >
-                  {question}
-                </button>
-              ))}
+            <div className="flex flex-wrap justify-center items-center">
+              {suggestedQuestions.map((question, index) => {
+                // Random-ish offsets for organic feel
+                const offsets = [
+                  { mt: '0', mb: '8px', mx: '4px' },
+                  { mt: '12px', mb: '0', mx: '6px' },
+                  { mt: '4px', mb: '4px', mx: '3px' },
+                  { mt: '8px', mb: '6px', mx: '5px' },
+                  { mt: '2px', mb: '10px', mx: '4px' },
+                  { mt: '10px', mb: '2px', mx: '6px' },
+                ];
+                const offset = offsets[index % offsets.length];
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(question)}
+                    disabled={isChatting || isListening}
+                    className="px-3 py-1.5 text-xs rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.55)',
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      marginTop: offset.mt,
+                      marginBottom: offset.mb,
+                      marginLeft: offset.mx,
+                      marginRight: offset.mx,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.55)';
+                    }}
+                  >
+                    {question}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
