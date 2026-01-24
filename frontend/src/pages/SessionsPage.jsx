@@ -331,6 +331,7 @@ const SessionsPage = () => {
                   return (
                     <div
                       key={session.id}
+                      onClick={() => navigate(`/sessions/${session.id}/chat`)}
                       className="group relative p-6 rounded-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                       style={{
                         background: 'rgba(255, 255, 255, 0.04)',
@@ -340,7 +341,10 @@ const SessionsPage = () => {
                       {/* Session Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="absolute top-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all">
+                          <button 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+                          >
                             <MoreVertical className="w-4 h-4 text-white/50" />
                           </button>
                         </DropdownMenuTrigger>
@@ -353,7 +357,10 @@ const SessionsPage = () => {
                           }}
                         >
                           <DropdownMenuItem
-                            onClick={() => handleDeleteSession(session.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSession(session.id);
+                            }}
                             className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer py-2.5"
                           >
                             <Trash2 className="w-4 h-4 mr-3" />
@@ -402,12 +409,10 @@ const SessionsPage = () => {
                         <p className="text-xs text-white/25">
                           {formatDate(session.created_at)}
                         </p>
-                        <button 
-                          className="flex items-center gap-1.5 text-xs font-medium text-[#8FEC78] hover:text-[#a5f08f] transition-colors"
-                        >
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-[#8FEC78]">
                           <Play className="w-3.5 h-3.5" />
                           Continue
-                        </button>
+                        </span>
                       </div>
                     </div>
                   );
