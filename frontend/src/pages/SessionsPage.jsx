@@ -323,13 +323,27 @@ const SessionsPage = () => {
                             align="end"
                             className="rounded-xl border-0 p-1.5"
                             style={{
-                              background: 'rgba(0, 0, 0, 0.85)',
+                              background: 'rgba(255, 255, 255, 0.08)',
                               backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
                             }}
                           >
                             <DropdownMenuItem
                               onClick={(e) => handleDeleteSession(session.id, e)}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer text-sm py-2"
+                              className="rounded-lg cursor-pointer text-sm py-2 px-3 focus:bg-red-500/10 focus:text-red-400"
+                              style={{ 
+                                color: 'rgba(239, 68, 68, 0.9)',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                                e.currentTarget.style.color = '#EF4444';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = 'rgba(239, 68, 68, 0.9)';
+                              }}
                             >
                               <Trash2 className="w-4 h-4 mr-2.5" />
                               Delete
