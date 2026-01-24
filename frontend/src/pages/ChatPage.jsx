@@ -303,20 +303,18 @@ const ChatPage = () => {
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Chat History Button */}
+              {/* Chat History Link */}
               {messages.length > 0 && (
-                <button
-                  onClick={() => setShowHistory(true)}
+                <Link
+                  to={`/sessions/${sessionId}/history`}
                   className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all hover:bg-white/10"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: 'rgba(255, 255, 255, 0.5)',
                   }}
                 >
                   <MessageSquare className="w-4 h-4" />
                   <span className="hidden sm:inline">History</span>
-                </button>
+                </Link>
               )}
               
               <button
