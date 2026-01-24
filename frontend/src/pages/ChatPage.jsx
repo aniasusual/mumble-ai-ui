@@ -36,9 +36,6 @@ const ChatPage = () => {
   const [currentResponse, setCurrentResponse] = useState('');
   const [chatSessionId, setChatSessionId] = useState(() => `chat-${sessionId}-${Date.now()}`);
   
-  // Chat history modal
-  const [showHistory, setShowHistory] = useState(false);
-  
   // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
