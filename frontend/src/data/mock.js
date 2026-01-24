@@ -13,8 +13,8 @@ export const miaConfig = {
 // App information - minimalistic
 export const appInfo = {
   name: "mumble",
-  tagline: "Your playground to learn and practice anything",
-  description: "Starting with languages. Your AI tutor. From first words to fluent conversations.",
+  tagline: "Your playground to learn and practice languages",
+  description: "Your AI tutor. From first words to fluent conversations.",
 };
 
 // Suggested questions for users - Clear, specific, conversion-focused
