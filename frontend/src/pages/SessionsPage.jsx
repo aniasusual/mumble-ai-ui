@@ -45,19 +45,6 @@ const LANGUAGES = [
   { value: 'mandarin', label: 'Mandarin', flag: '🇨🇳' },
 ];
 
-const LEVELS = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
-];
-
-const DURATIONS = [
-  { value: 15, label: '15 min' },
-  { value: 30, label: '30 min' },
-  { value: 45, label: '45 min' },
-  { value: 60, label: '60 min' },
-];
-
 const SessionsPage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
