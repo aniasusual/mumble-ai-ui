@@ -194,7 +194,7 @@ const SessionsPage = () => {
 
         {/* Main Content */}
         <main className="flex-1 px-6 pt-28 pb-12">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             {/* Page Header */}
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-2xl font-semibold text-white">
