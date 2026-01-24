@@ -154,41 +154,37 @@ const SessionsPage = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-56 mt-3 p-2 rounded-2xl border-0"
+                className="w-52 mt-3 p-3 rounded-2xl border-0 shadow-none"
                 style={{
-                  background: 'rgba(10, 10, 10, 0.95)',
+                  background: 'rgba(255, 255, 255, 0.06)',
                   backdropFilter: 'blur(40px)',
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                  WebkitBackdropFilter: 'blur(40px)',
                 }}
               >
-                <div className="px-3 py-3 mb-2">
+                <div className="mb-3">
                   <p className="text-sm font-medium text-white">{user?.name}</p>
                   <p className="text-xs text-white/40 truncate">{user?.email}</p>
                 </div>
-                <DropdownMenuSeparator className="bg-white/[0.06] -mx-2" />
-                <div className="pt-2">
+                <div className="space-y-1">
                   <DropdownMenuItem 
                     onClick={() => setShowProfileModal(true)}
-                    className="text-white/60 hover:text-white hover:bg-white/[0.06] rounded-xl cursor-pointer text-sm py-2.5 px-3 focus:bg-white/[0.06] focus:text-white"
+                    className="text-white/50 hover:text-white hover:bg-transparent rounded-xl cursor-pointer text-sm py-2 px-0 focus:bg-transparent focus:text-white"
                   >
-                    <User className="w-4 h-4 mr-3 opacity-60" />
+                    <User className="w-4 h-4 mr-3" />
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setShowSettingsModal(true)}
-                    className="text-white/60 hover:text-white hover:bg-white/[0.06] rounded-xl cursor-pointer text-sm py-2.5 px-3 focus:bg-white/[0.06] focus:text-white"
+                    className="text-white/50 hover:text-white hover:bg-transparent rounded-xl cursor-pointer text-sm py-2 px-0 focus:bg-transparent focus:text-white"
                   >
-                    <Settings className="w-4 h-4 mr-3 opacity-60" />
+                    <Settings className="w-4 h-4 mr-3" />
                     Settings
                   </DropdownMenuItem>
-                </div>
-                <DropdownMenuSeparator className="bg-white/[0.06] -mx-2 mt-2" />
-                <div className="pt-2">
                   <DropdownMenuItem 
                     onClick={handleLogout}
-                    className="text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-xl cursor-pointer text-sm py-2.5 px-3 focus:bg-red-500/10 focus:text-red-400"
+                    className="text-white/50 hover:text-red-400 hover:bg-transparent rounded-xl cursor-pointer text-sm py-2 px-0 focus:bg-transparent focus:text-red-400"
                   >
-                    <LogOut className="w-4 h-4 mr-3 opacity-60" />
+                    <LogOut className="w-4 h-4 mr-3" />
                     Log out
                   </DropdownMenuItem>
                 </div>
