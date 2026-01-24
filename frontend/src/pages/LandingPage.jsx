@@ -392,11 +392,12 @@ const LandingPage = () => {
               {isAuthenticated ? (
                 <Link
                   to="/sessions"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.05)',
                   }}
                 >
                   Sessions
@@ -404,10 +405,12 @@ const LandingPage = () => {
               ) : (
                 <Link
                   to="/signin"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
                   style={{
-                    background: 'linear-gradient(135deg, #8FEC78 0%, #5AC94B 100%)',
-                    color: '#000',
+                    background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)',
+                    color: '#8FEC78',
+                    border: '1px solid rgba(143, 236, 120, 0.3)',
+                    boxShadow: '0 0 20px rgba(143, 236, 120, 0.15)',
                   }}
                 >
                   Sign In
