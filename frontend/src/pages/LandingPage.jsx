@@ -365,7 +365,7 @@ const LandingPage = () => {
         
         {/* Minimal Header */}
         <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
-          <nav className="flex items-center justify-between max-w-4xl mx-auto">
+          <nav className="flex items-center justify-between max-w-5xl mx-auto">
             <div className="flex items-center gap-2">
               <MumbleLogo size={32} color="#ffffff" isAnimating={isSpeaking} />
               <span 
