@@ -6,28 +6,26 @@ import LiquidOrb from '../components/LiquidOrb';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/ui/input';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import {
   ArrowLeft,
   Send,
   Mic,
   Volume2,
   VolumeX,
-  Clock,
-  Globe,
   Loader2,
+  MessageSquare,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-const LANGUAGES = [
-  { value: 'spanish', label: 'Spanish', flag: '🇪🇸' },
-  { value: 'french', label: 'French', flag: '🇫🇷' },
-  { value: 'german', label: 'German', flag: '🇩🇪' },
-  { value: 'japanese', label: 'Japanese', flag: '🇯🇵' },
-  { value: 'mandarin', label: 'Mandarin', flag: '🇨🇳' },
-];
 
 const ChatPage = () => {
   const { sessionId } = useParams();
@@ -42,7 +40,11 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
+  const [currentResponse, setCurrentResponse] = useState('');
   const [chatSessionId, setChatSessionId] = useState(() => `chat-${sessionId}-${Date.now()}`);
+  
+  // Chat history modal
+  const [showHistory, setShowHistory] = useState(false);
   
   // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -54,8 +56,8 @@ const ChatPage = () => {
   
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
-  const messagesEndRef = useRef(null);
   const introCalledRef = useRef(false);
+  const historyEndRef = useRef(null);
 
   // Fetch session data
   useEffect(() => {
@@ -63,6 +65,16 @@ const ChatPage = () => {
       try {
         const response = await axios.get(`${API}/sessions/${sessionId}`);
         setSession(response.data);
+        // Load existing chat history if available
+        if (response.data.chat_history) {
+          setMessages(response.data.chat_history);
+          if (response.data.chat_history.length > 0) {
+            const lastAssistantMsg = [...response.data.chat_history].reverse().find(m => m.role === 'assistant');
+            if (lastAssistantMsg) {
+              setCurrentResponse(lastAssistantMsg.content);
+            }
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch session:', error);
         toast.error('Session not found');
@@ -74,6 +86,17 @@ const ChatPage = () => {
     
     fetchSession();
   }, [sessionId, navigate]);
+
+  // Save chat history to session
+  const saveChatHistory = useCallback(async (newMessages) => {
+    try {
+      await axios.put(`${API}/sessions/${sessionId}`, {
+        chat_history: newMessages
+      });
+    } catch (error) {
+      console.error('Failed to save chat history:', error);
+    }
+  }, [sessionId]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -120,10 +143,12 @@ const ChatPage = () => {
     };
   }, []);
 
-  // Auto-scroll to bottom
+  // Scroll to bottom of history
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (showHistory) {
+      historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [showHistory, messages]);
 
   // Play audio from base64
   const playAudioFromBase64 = useCallback((base64Audio) => {
@@ -145,13 +170,17 @@ const ChatPage = () => {
   const sendMessage = useCallback(async (message, isIntro = false) => {
     if (!message.trim() || isChatting) return;
     
+    let updatedMessages = [...messages];
+    
     // Add user message to chat
     if (!isIntro) {
-      setMessages(prev => [...prev, { role: 'user', content: message }]);
+      updatedMessages = [...messages, { role: 'user', content: message }];
+      setMessages(updatedMessages);
       setChatInput('');
     }
     
     setIsChatting(true);
+    setCurrentResponse('');
     
     try {
       const response = await axios.post(`${API}/chat-voice`, {
@@ -159,8 +188,13 @@ const ChatPage = () => {
         session_id: chatSessionId
       }, { timeout: 30000 });
       
-      // Add AI response to chat
-      setMessages(prev => [...prev, { role: 'assistant', content: response.data.response }]);
+      // Add AI response
+      const newMessages = [...updatedMessages, { role: 'assistant', content: response.data.response }];
+      setMessages(newMessages);
+      setCurrentResponse(response.data.response);
+      
+      // Save to session
+      saveChatHistory(newMessages);
       
       if (response.data.audio) {
         playAudioFromBase64(response.data.audio);
@@ -173,18 +207,25 @@ const ChatPage = () => {
     } finally {
       setIsChatting(false);
     }
-  }, [isChatting, chatSessionId, playAudioFromBase64]);
+  }, [isChatting, chatSessionId, messages, playAudioFromBase64, saveChatHistory]);
 
-  // Trigger intro message when session loads
+  // Trigger intro message when session loads (only for new sessions)
   useEffect(() => {
-    if (!session || introCalledRef.current) return;
+    if (!session || introCalledRef.current || isLoadingSession) return;
+    
+    // Only send intro if no chat history exists
+    if (session.chat_history && session.chat_history.length > 0) {
+      introCalledRef.current = true;
+      return;
+    }
+    
     introCalledRef.current = true;
     
-    const language = LANGUAGES.find(l => l.value === session.language)?.label || session.language;
-    const introMessage = `Start a ${session.level} level ${language} learning session about "${session.title}". Introduce yourself briefly and begin the lesson.`;
+    // New session - Mia asks about language preferences
+    const introMessage = `This is a new learning session. Greet the user warmly and ask them which language they would like to learn today. Keep it brief and friendly.`;
     
     sendMessage(introMessage, true);
-  }, [session, sendMessage]);
+  }, [session, isLoadingSession, sendMessage]);
 
   // Toggle mute
   const toggleMute = () => {
@@ -238,11 +279,6 @@ const ChatPage = () => {
     }
   };
 
-  // Get language info
-  const getLanguageInfo = (languageValue) => {
-    return LANGUAGES.find(l => l.value === languageValue) || { label: languageValue, flag: '🌐' };
-  };
-
   if (isLoadingSession) {
     return (
       <MeshGradientBackground>
@@ -253,8 +289,6 @@ const ChatPage = () => {
     );
   }
 
-  const language = getLanguageInfo(session?.language);
-
   return (
     <MeshGradientBackground>
       <div className="min-h-screen flex flex-col">
@@ -262,7 +296,7 @@ const ChatPage = () => {
         <audio ref={audioRef} />
         
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+        <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
           <nav className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
@@ -274,111 +308,88 @@ const ChatPage = () => {
               <div className="flex items-center gap-3">
                 <MumbleLogo size={32} color="#ffffff" isAnimating={isSpeaking} />
                 <div>
-                  <h1 className="text-white font-medium text-sm">{session?.title}</h1>
-                  <div className="flex items-center gap-2 text-white/40 text-xs">
-                    <span>{language.flag} {language.label}</span>
-                    <span>•</span>
-                    <span className="capitalize">{session?.level}</span>
-                  </div>
+                  <h1 className="text-white font-medium text-sm">
+                    {session?.title || 'New Session'}
+                  </h1>
+                  {session?.language && (
+                    <p className="text-white/40 text-xs">
+                      {session.language} • {session.level || 'Getting started'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
             
-            <button
-              onClick={toggleMute}
-              className="p-2.5 rounded-full transition-all hover:bg-white/10"
-              title={isMuted ? 'Unmute' : 'Mute'}
-            >
-              {isMuted ? (
-                <VolumeX size={20} className="text-white/40" />
-              ) : (
-                <Volume2 size={20} className="text-white/70" />
+            <div className="flex items-center gap-2">
+              {/* Chat History Button */}
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setShowHistory(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all hover:bg-white/10"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span className="hidden sm:inline">History</span>
+                </button>
               )}
-            </button>
+              
+              <button
+                onClick={toggleMute}
+                className="p-2.5 rounded-full transition-all hover:bg-white/10"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? (
+                  <VolumeX size={20} className="text-white/40" />
+                ) : (
+                  <Volume2 size={20} className="text-white/70" />
+                )}
+              </button>
+            </div>
           </nav>
         </header>
 
-        {/* Chat Area */}
-        <main className="flex-1 flex flex-col pt-24 pb-32">
-          <div className="flex-1 max-w-3xl mx-auto w-full px-6 overflow-y-auto">
-            {/* Orb and initial state */}
-            {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16">
-                <LiquidOrb isSpeaking={isSpeaking || isListening} />
-                <div className="mt-6 text-center">
-                  {isChatting ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  ) : (
-                    <p className="text-white/40">Starting your session...</p>
-                  )}
-                </div>
+        {/* Main Content - Landing Page Style */}
+        <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-32">
+          {/* Liquid Orb */}
+          <div className="mb-8">
+            <LiquidOrb isSpeaking={isSpeaking || isListening} />
+          </div>
+
+          {/* Response Display - Like Landing Page */}
+          <div className="text-center max-w-lg mx-auto mb-8 min-h-[80px]">
+            {isListening ? (
+              <p 
+                className="text-lg leading-relaxed animate-pulse"
+                style={{ color: 'rgba(143, 236, 120, 0.8)' }}
+              >
+                {chatInput || "Listening..."}
+              </p>
+            ) : currentResponse ? (
+              <p 
+                className="text-lg leading-relaxed"
+                style={{ color: 'rgba(255, 255, 255, 0.8)' }}
+              >
+                "{currentResponse}"
+              </p>
+            ) : isChatting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-            )}
-            
-            {/* Messages */}
-            {messages.length > 0 && (
-              <div className="space-y-6 py-6">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] px-5 py-4 rounded-2xl ${
-                        message.role === 'user'
-                          ? 'rounded-br-md'
-                          : 'rounded-bl-md'
-                      }`}
-                      style={{
-                        background: message.role === 'user'
-                          ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)'
-                          : 'rgba(255, 255, 255, 0.06)',
-                        border: message.role === 'user'
-                          ? '1px solid rgba(143, 236, 120, 0.2)'
-                          : '1px solid rgba(255, 255, 255, 0.08)',
-                      }}
-                    >
-                      <p className={`text-sm leading-relaxed ${
-                        message.role === 'user' ? 'text-[#8FEC78]' : 'text-white/80'
-                      }`}>
-                        {message.content}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Typing indicator */}
-                {isChatting && messages.length > 0 && (
-                  <div className="flex justify-start">
-                    <div
-                      className="px-5 py-4 rounded-2xl rounded-bl-md"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
+            ) : (
+              <p className="text-white/40">
+                Start a conversation with Mia
+              </p>
             )}
           </div>
-        </main>
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-          <div className="max-w-3xl mx-auto">
+          {/* Input Area */}
+          <div className="w-full max-w-lg">
             <form onSubmit={handleChatSubmit} className="flex gap-3">
               {/* Microphone Button */}
               <button
@@ -430,7 +441,73 @@ const ChatPage = () => {
               </div>
             </form>
           </div>
-        </div>
+        </main>
+
+        {/* Chat History Modal */}
+        <Dialog open={showHistory} onOpenChange={setShowHistory}>
+          <DialogContent
+            className="sm:max-w-2xl max-h-[80vh] border-0 p-0 overflow-hidden"
+            style={{
+              background: 'transparent',
+            }}
+          >
+            <div 
+              className="flex flex-col h-full max-h-[80vh]"
+              style={{
+                background: 'rgba(0, 0, 0, 0.9)',
+                backdropFilter: 'blur(40px)',
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold text-white">
+                    Chat History
+                  </DialogTitle>
+                </DialogHeader>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5 text-white/50" />
+                </button>
+              </div>
+              
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] px-4 py-3 rounded-2xl ${
+                        message.role === 'user'
+                          ? 'rounded-br-md'
+                          : 'rounded-bl-md'
+                      }`}
+                      style={{
+                        background: message.role === 'user'
+                          ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)'
+                          : 'rgba(255, 255, 255, 0.06)',
+                        border: message.role === 'user'
+                          ? '1px solid rgba(143, 236, 120, 0.2)'
+                          : '1px solid rgba(255, 255, 255, 0.08)',
+                      }}
+                    >
+                      <p className={`text-sm leading-relaxed ${
+                        message.role === 'user' ? 'text-[#8FEC78]' : 'text-white/80'
+                      }`}>
+                        {message.content}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={historyEndRef} />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MeshGradientBackground>
   );
