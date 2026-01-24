@@ -100,13 +100,13 @@ const MeshGradientBackground = ({ children }) => {
             transform: translate(0, 0) scale(1);
           }
           25% {
-            transform: translate(-30px, 40px) scale(1.1);
+            transform: translate(-50px, 60px) scale(1.1);
           }
           50% {
-            transform: translate(20px, -20px) scale(0.95);
+            transform: translate(30px, -30px) scale(0.95);
           }
           75% {
-            transform: translate(-10px, 30px) scale(1.05);
+            transform: translate(-20px, 40px) scale(1.05);
           }
         }
         
@@ -115,10 +115,10 @@ const MeshGradientBackground = ({ children }) => {
             transform: translate(0, 0) scale(1);
           }
           33% {
-            transform: translate(40px, -30px) scale(1.1);
+            transform: translate(60px, -50px) scale(1.15);
           }
           66% {
-            transform: translate(-20px, 20px) scale(0.9);
+            transform: translate(-30px, 30px) scale(0.9);
           }
         }
         
@@ -127,7 +127,7 @@ const MeshGradientBackground = ({ children }) => {
             transform: translate(0, 0) scale(1) rotate(0deg);
           }
           50% {
-            transform: translate(30px, 30px) scale(1.15) rotate(10deg);
+            transform: translate(50px, 50px) scale(1.2) rotate(15deg);
           }
         }
         
@@ -136,10 +136,10 @@ const MeshGradientBackground = ({ children }) => {
             transform: translate(0, 0) scale(1);
           }
           40% {
-            transform: translate(25px, 35px) scale(1.1);
+            transform: translate(40px, 50px) scale(1.15);
           }
           80% {
-            transform: translate(-15px, -25px) scale(0.95);
+            transform: translate(-25px, -35px) scale(0.95);
           }
         }
         
@@ -148,10 +148,22 @@ const MeshGradientBackground = ({ children }) => {
             transform: translate(0, 0) scale(1);
           }
           30% {
-            transform: translate(-35px, -20px) scale(1.05);
+            transform: translate(-50px, -30px) scale(1.1);
           }
           60% {
-            transform: translate(25px, 30px) scale(0.95);
+            transform: translate(35px, 45px) scale(0.95);
+          }
+        }
+        
+        @keyframes meshFloat6 {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
+          }
+          35% {
+            transform: translate(-40px, 30px) scale(1.1);
+          }
+          70% {
+            transform: translate(30px, -40px) scale(0.9);
           }
         }
       `}</style>
