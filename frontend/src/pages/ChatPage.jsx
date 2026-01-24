@@ -374,26 +374,28 @@ const ChatPage = () => {
           {/* Input Area */}
           <div className="w-full max-w-lg">
             <form onSubmit={handleChatSubmit} className="flex gap-3 items-center">
-              {/* Microphone Button - Expands when listening, shrinks when input focused */}
+              {/* Microphone Button - Full width when listening, small button when input focused */}
               <button
                 type="button"
                 onClick={isListening ? handleVoiceSend : toggleListening}
                 disabled={isChatting}
-                className="h-14 rounded-full flex items-center justify-center gap-2 transition-all duration-500 ease-out disabled:opacity-30 overflow-hidden"
+                className="h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 ease-out disabled:opacity-30 overflow-hidden flex-shrink-0"
                 style={{
-                  width: isListening ? '160px' : inputFocused ? '48px' : '56px',
+                  width: isListening ? 'calc(100% - 68px)' : '56px',
+                  flex: isListening ? '1 1 auto' : '0 0 56px',
                   background: isListening 
-                    ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%)'
+                    ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)'
                     : 'rgba(255, 255, 255, 0.06)',
                   border: isListening
-                    ? '1px solid rgba(143, 236, 120, 0.4)'
+                    ? '1px solid rgba(143, 236, 120, 0.3)'
                     : '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: isListening ? '0 0 30px rgba(143, 236, 120, 0.2)' : 'none',
+                  boxShadow: isListening ? '0 0 40px rgba(143, 236, 120, 0.15)' : 'none',
                 }}
                 title={isListening ? 'Send voice message' : 'Start voice input'}
               >
                 {isListening ? (
                   <>
+                    <Mic size={20} className="text-[#8FEC78]" />
                     <div className="flex items-center gap-1">
                       <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
                       <span className="w-1 h-5 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
@@ -401,49 +403,68 @@ const ChatPage = () => {
                       <span className="w-1 h-6 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '100ms' }} />
                       <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
                     </div>
-                    <Send size={18} className="text-[#8FEC78] ml-2" />
+                    <span className="text-[#8FEC78] text-sm font-medium ml-2">Tap to send</span>
+                    <Send size={18} className="text-[#8FEC78] ml-auto mr-2" />
                   </>
                 ) : (
-                  <Mic size={inputFocused ? 18 : 20} className="text-white/50" />
+                  <Mic size={20} className="text-white/50" />
                 )}
               </button>
               
-              {/* Text Input - Expands when focused, shrinks when listening */}
+              {/* Text Input - Small button when listening, expands when focused */}
               <div 
                 className="relative transition-all duration-500 ease-out"
                 style={{
                   flex: isListening ? '0 0 56px' : '1 1 auto',
-                  minWidth: isListening ? '56px' : 'auto',
+                  width: isListening ? '56px' : 'auto',
                 }}
               >
-                <Input
-                  type="text"
-                  placeholder={isListening ? "" : "Type your message..."}
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onFocus={() => setInputFocused(true)}
-                  onBlur={() => setInputFocused(false)}
-                  disabled={isChatting || isListening}
-                  className={`h-14 rounded-2xl text-white placeholder:text-white/25 transition-all duration-500 border-0 focus-visible:ring-1 focus-visible:ring-[#8FEC78]/50 ${
-                    isListening ? 'pl-4 pr-4 cursor-default' : 'pl-5 pr-14'
-                  }`}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    opacity: isListening ? 0.5 : 1,
-                  }}
-                />
-                {!isListening && (
+                {isListening ? (
+                  // Show as a simple button when mic is active
                   <button
-                    type="submit"
-                    disabled={isChatting || !chatInput.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all hover:bg-white/10 disabled:opacity-30"
+                    type="button"
+                    onClick={() => {
+                      if (recognitionRef.current) {
+                        recognitionRef.current.stop();
+                      }
+                      setIsListening(false);
+                    }}
+                    className="h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-300"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}
                   >
-                    {isChatting ? (
-                      <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
-                    ) : (
-                      <Send size={20} className="text-white/50" />
-                    )}
+                    <Send size={20} className="text-white/30" />
                   </button>
+                ) : (
+                  // Normal input when not listening
+                  <>
+                    <Input
+                      type="text"
+                      placeholder="Type your message..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onFocus={() => setInputFocused(true)}
+                      onBlur={() => setInputFocused(false)}
+                      disabled={isChatting}
+                      className="h-14 pl-5 pr-14 rounded-2xl text-white placeholder:text-white/25 transition-all duration-300 border-0 focus-visible:ring-1 focus-visible:ring-[#8FEC78]/50"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.06)',
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isChatting || !chatInput.trim()}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all hover:bg-white/10 disabled:opacity-30"
+                    >
+                      {isChatting ? (
+                        <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
+                      ) : (
+                        <Send size={20} className="text-white/50" />
+                      )}
+                    </button>
+                  </>
                 )}
               </div>
             </form>
