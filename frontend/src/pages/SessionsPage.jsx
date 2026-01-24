@@ -22,14 +22,11 @@ import {
   User,
   Settings,
   LogOut,
-  Clock,
-  Globe,
   BookOpen,
-  MoreVertical,
+  MoreHorizontal,
   Trash2,
   Loader2,
-  ChevronDown,
-  Play,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -84,7 +81,6 @@ const SessionsPage = () => {
     try {
       const response = await axios.post(`${API}/sessions`, {});
       setSessions([response.data, ...sessions]);
-      // Navigate to chat page
       navigate(`/sessions/${response.data.id}/chat`);
     } catch (error) {
       toast.error('Failed to create session');
@@ -93,7 +89,8 @@ const SessionsPage = () => {
   };
 
   // Delete session
-  const handleDeleteSession = async (sessionId) => {
+  const handleDeleteSession = async (sessionId, e) => {
+    e.stopPropagation();
     try {
       await axios.delete(`${API}/sessions/${sessionId}`);
       setSessions(sessions.filter(s => s.id !== sessionId));
@@ -112,100 +109,82 @@ const SessionsPage = () => {
 
   // Get language info
   const getLanguageInfo = (languageValue) => {
-    return LANGUAGES.find(l => l.value === languageValue) || { label: languageValue, flag: '🌐' };
+    return LANGUAGES.find(l => l.value === languageValue) || null;
   };
 
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     });
   };
 
-  // Get status color
-  const getStatusStyles = (status) => {
-    switch (status) {
-      case 'active':
-        return { bg: 'rgba(143, 236, 120, 0.15)', color: '#8FEC78', border: 'rgba(143, 236, 120, 0.3)' };
-      case 'completed':
-        return { bg: 'rgba(74, 144, 217, 0.15)', color: '#4A90D9', border: 'rgba(74, 144, 217, 0.3)' };
-      case 'paused':
-        return { bg: 'rgba(251, 191, 36, 0.15)', color: '#FBB724', border: 'rgba(251, 191, 36, 0.3)' };
-      default:
-        return { bg: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.6)', border: 'rgba(255, 255, 255, 0.2)' };
-    }
-  };
-
   return (
     <MeshGradientBackground>
       <div className="min-h-screen flex flex-col">
-        {/* Seamless Header */}
+        {/* Minimal Header */}
         <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
-          <nav className="max-w-6xl mx-auto flex items-center justify-between">
+          <nav className="max-w-3xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <MumbleLogo size={36} color="#ffffff" />
-              <span className="font-semibold text-xl text-white">mumble</span>
+              <MumbleLogo size={32} color="#ffffff" />
+              <span className="font-medium text-lg text-white">mumble</span>
             </div>
             
-            {/* User Menu */}
+            {/* Minimal Profile Button */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button 
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 hover:scale-[1.02]"
+                <button className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-opacity hover:opacity-80"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.8)',
                   }}
                 >
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.3) 0%, rgba(90, 201, 75, 0.3) 100%)',
-                      border: '1px solid rgba(143, 236, 120, 0.4)',
-                      color: '#8FEC78',
-                    }}
-                  >
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <span className="text-white/80 text-sm hidden sm:block">{user?.name}</span>
-                  <ChevronDown className="w-4 h-4 text-white/40" />
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-56 mt-2 p-2 rounded-xl border-0"
+                className="w-48 mt-2 p-1.5 rounded-xl border-0"
                 style={{
-                  background: 'rgba(0, 0, 0, 0.8)',
+                  background: 'rgba(0, 0, 0, 0.85)',
                   backdropFilter: 'blur(20px)',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
                 }}
               >
-                <div className="px-3 py-3 mb-2">
+                <div className="px-3 py-2 mb-1">
                   <p className="text-sm font-medium text-white">{user?.name}</p>
-                  <p className="text-xs text-white/40">{user?.email}</p>
+                  <p className="text-xs text-white/40 truncate">{user?.email}</p>
                 </div>
+                <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem 
                   onClick={() => setShowProfileModal(true)}
-                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer py-2.5"
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer text-sm py-2"
                 >
-                  <User className="w-4 h-4 mr-3" />
+                  <User className="w-4 h-4 mr-2.5" />
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setShowSettingsModal(true)}
-                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer py-2.5"
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer text-sm py-2"
                 >
-                  <Settings className="w-4 h-4 mr-3" />
+                  <Settings className="w-4 h-4 mr-2.5" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10 my-2" />
+                <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem 
                   onClick={handleLogout}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer py-2.5"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer text-sm py-2"
                 >
-                  <LogOut className="w-4 h-4 mr-3" />
+                  <LogOut className="w-4 h-4 mr-2.5" />
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -215,184 +194,130 @@ const SessionsPage = () => {
 
         {/* Main Content */}
         <main className="flex-1 px-6 pt-28 pb-12">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">
-                  Your Sessions
-                </h1>
-                <p className="text-white/40">
-                  Continue learning or start a new session
-                </p>
-              </div>
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-2xl font-semibold text-white">
+                Sessions
+              </h1>
               
-              {/* New Session Button - Pill glow style */}
+              {/* Minimal New Session Button */}
               <button
                 onClick={handleCreateSession}
                 disabled={isCreating}
-                className="flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)',
-                  color: '#8FEC78',
-                  border: '1px solid rgba(143, 236, 120, 0.3)',
-                  boxShadow: '0 0 30px rgba(143, 236, 120, 0.15)',
-                }}
+                className="flex items-center gap-2 text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50"
+                style={{ color: '#8FEC78' }}
               >
                 {isCreating ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <>
-                    <Plus className="w-5 h-5" />
-                    New Session
-                  </>
+                  <Plus className="w-4 h-4" />
                 )}
+                New
               </button>
             </div>
 
             {/* Sessions Content */}
             {isLoading ? (
               <div className="flex items-center justify-center py-32">
-                <Loader2 className="w-8 h-8 text-white/30 animate-spin" />
+                <Loader2 className="w-6 h-6 text-white/30 animate-spin" />
               </div>
             ) : sessions.length === 0 ? (
-              /* Empty State - Seamless */
-              <div className="text-center py-24">
-                <div 
-                  className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                  }}
-                >
-                  <BookOpen className="w-10 h-10 text-white/20" />
-                </div>
-                <h3 className="text-2xl font-semibold text-white/80 mb-3">
-                  No sessions yet
-                </h3>
-                <p className="text-white/40 mb-8 max-w-sm mx-auto">
-                  Create your first learning session and start your language journey with Mia
-                </p>
+              /* Empty State */
+              <div className="text-center py-20">
+                <BookOpen className="w-10 h-10 text-white/15 mx-auto mb-4" />
+                <p className="text-white/40 mb-6">No sessions yet</p>
                 <button
                   onClick={handleCreateSession}
                   disabled={isCreating}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)',
-                    color: '#8FEC78',
-                    border: '1px solid rgba(143, 236, 120, 0.3)',
-                    boxShadow: '0 0 40px rgba(143, 236, 120, 0.2)',
-                  }}
+                  className="text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50"
+                  style={{ color: '#8FEC78' }}
                 >
                   {isCreating ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating...
+                    </span>
                   ) : (
-                    'Create Your First Session'
+                    <span className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Create your first session
+                    </span>
                   )}
                 </button>
               </div>
             ) : (
-              /* Sessions Grid */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              /* Sessions List */
+              <div className="space-y-1">
                 {sessions.map((session) => {
                   const language = session.language ? getLanguageInfo(session.language) : null;
-                  const statusStyles = getStatusStyles(session.status);
                   return (
                     <div
                       key={session.id}
                       onClick={() => navigate(`/sessions/${session.id}/chat`)}
-                      className="group relative p-6 rounded-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                      }}
+                      className="group flex items-center justify-between py-4 px-4 -mx-4 rounded-xl cursor-pointer transition-all hover:bg-white/5"
                     >
-                      {/* Session Menu */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute top-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
-                          >
-                            <MoreVertical className="w-4 h-4 text-white/50" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="rounded-xl border-0 p-2"
+                      <div className="flex items-center gap-4 min-w-0">
+                        {/* Language Flag or Placeholder */}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{
-                            background: 'rgba(0, 0, 0, 0.8)',
-                            backdropFilter: 'blur(20px)',
+                            background: 'rgba(255, 255, 255, 0.05)',
                           }}
                         >
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteSession(session.id);
-                            }}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer py-2.5"
-                          >
-                            <Trash2 className="w-4 h-4 mr-3" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Language & Status */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
                           {language ? (
-                            <>
-                              <span className="text-2xl">{language.flag}</span>
-                              <span className="text-sm text-white/50">{language.label}</span>
-                            </>
+                            <span className="text-lg">{language.flag}</span>
                           ) : (
-                            <span className="text-sm text-white/30">Language not set</span>
+                            <span className="text-lg">💬</span>
                           )}
                         </div>
-                        <span 
-                          className="px-3 py-1 rounded-full text-xs font-medium"
-                          style={{
-                            background: statusStyles.bg,
-                            color: statusStyles.color,
-                            border: `1px solid ${statusStyles.border}`,
-                          }}
-                        >
-                          {session.status}
-                        </span>
+                        
+                        {/* Session Info */}
+                        <div className="min-w-0">
+                          <h3 className="text-white font-medium truncate">
+                            {session.title || 'New Session'}
+                          </h3>
+                          <p className="text-white/40 text-sm truncate">
+                            {language ? language.label : 'Getting started'}
+                            {session.level && ` · ${session.level}`}
+                          </p>
+                        </div>
                       </div>
-
-                      {/* Title */}
-                      <h3 className="text-lg font-semibold text-white mb-4 pr-8">
-                        {session.title || 'New Session'}
-                      </h3>
-
-                      {/* Meta Info */}
-                      {(session.level || session.duration_minutes) && (
-                        <div className="flex items-center gap-4 text-sm text-white/30 mb-4">
-                          {session.level && (
-                            <div className="flex items-center gap-1.5">
-                              <Globe className="w-4 h-4" />
-                              <span className="capitalize">{session.level}</span>
-                            </div>
-                          )}
-                          {session.duration_minutes && (
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
-                              <span>{session.duration_minutes} min</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                        <p className="text-xs text-white/25">
+                      
+                      {/* Right Side */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-white/25 text-sm hidden sm:block">
                           {formatDate(session.created_at)}
-                        </p>
-                        <span className="flex items-center gap-1.5 text-xs font-medium text-[#8FEC78]">
-                          <Play className="w-3.5 h-3.5" />
-                          Continue
                         </span>
+                        
+                        {/* More Options */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button 
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+                            >
+                              <MoreHorizontal className="w-4 h-4 text-white/40" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="rounded-xl border-0 p-1.5"
+                            style={{
+                              background: 'rgba(0, 0, 0, 0.85)',
+                              backdropFilter: 'blur(20px)',
+                            }}
+                          >
+                            <DropdownMenuItem
+                              onClick={(e) => handleDeleteSession(session.id, e)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer text-sm py-2"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2.5" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        
+                        <ChevronRight className="w-4 h-4 text-white/20" />
                       </div>
                     </div>
                   );
@@ -405,60 +330,55 @@ const SessionsPage = () => {
         {/* Profile Modal */}
         <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
           <DialogContent
-            className="sm:max-w-md border-0 p-0 overflow-hidden"
-            style={{
-              background: 'transparent',
-            }}
+            className="sm:max-w-sm border-0 p-0 overflow-hidden"
+            style={{ background: 'transparent' }}
           >
             <div 
-              className="p-8"
+              className="p-6"
               style={{
-                background: 'rgba(0, 0, 0, 0.85)',
+                background: 'rgba(0, 0, 0, 0.9)',
                 backdropFilter: 'blur(40px)',
               }}
             >
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-white text-center mb-8">
+                <DialogTitle className="text-lg font-semibold text-white mb-6">
                   Profile
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="flex flex-col items-center mb-8">
+              <div className="flex items-center gap-4 mb-6">
                 <div 
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold mb-4"
+                  className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-medium"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%)',
-                    border: '2px solid rgba(143, 236, 120, 0.4)',
-                    color: '#8FEC78',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.8)',
                   }}
                 >
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <h3 className="text-xl font-semibold text-white">{user?.name}</h3>
-                <p className="text-white/40 text-sm">{user?.email}</p>
+                <div>
+                  <h3 className="text-white font-medium">{user?.name}</h3>
+                  <p className="text-white/40 text-sm">{user?.email}</p>
+                </div>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-white/50 mb-2 block">Name</label>
+                  <label className="text-xs text-white/40 mb-1.5 block">Name</label>
                   <Input
                     value={user?.name || ''}
                     disabled
-                    className="h-14 rounded-2xl text-white/50 border-0"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                    }}
+                    className="h-11 rounded-xl text-white/50 text-sm border-0"
+                    style={{ background: 'rgba(255, 255, 255, 0.05)' }}
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-white/50 mb-2 block">Email</label>
+                  <label className="text-xs text-white/40 mb-1.5 block">Email</label>
                   <Input
                     value={user?.email || ''}
                     disabled
-                    className="h-14 rounded-2xl text-white/50 border-0"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                    }}
+                    className="h-11 rounded-xl text-white/50 text-sm border-0"
+                    style={{ background: 'rgba(255, 255, 255, 0.05)' }}
                   />
                 </div>
               </div>
@@ -469,54 +389,43 @@ const SessionsPage = () => {
         {/* Settings Modal */}
         <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
           <DialogContent
-            className="sm:max-w-md border-0 p-0 overflow-hidden"
-            style={{
-              background: 'transparent',
-            }}
+            className="sm:max-w-sm border-0 p-0 overflow-hidden"
+            style={{ background: 'transparent' }}
           >
             <div 
-              className="p-8"
+              className="p-6"
               style={{
-                background: 'rgba(0, 0, 0, 0.85)',
+                background: 'rgba(0, 0, 0, 0.9)',
                 backdropFilter: 'blur(40px)',
               }}
             >
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-white text-center mb-8">
+                <DialogTitle className="text-lg font-semibold text-white mb-6">
                   Settings
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-sm font-medium text-white/70 mb-3">Preferences</h4>
-                  <div 
-                    className="p-5 rounded-2xl"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                    }}
-                  >
-                    <p className="text-white/40 text-sm">
-                      More settings coming soon...
-                    </p>
-                  </div>
+              <div className="space-y-4">
+                <div 
+                  className="p-4 rounded-xl"
+                  style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                >
+                  <p className="text-white/30 text-sm">
+                    More settings coming soon
+                  </p>
                 </div>
                 
-                <div>
-                  <h4 className="text-sm font-medium text-white/70 mb-3">Account</h4>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full h-14 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      color: '#EF4444',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                    }}
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Log out
-                  </button>
-                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full h-11 rounded-xl text-sm font-medium transition-all hover:bg-red-500/20 flex items-center justify-center gap-2"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    color: '#EF4444',
+                  }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Log out
+                </button>
               </div>
             </div>
           </DialogContent>
