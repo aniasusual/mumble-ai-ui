@@ -44,6 +44,9 @@ const ChatPage = () => {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   
+  // Input focus state
+  const [inputFocused, setInputFocused] = useState(false);
+  
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
