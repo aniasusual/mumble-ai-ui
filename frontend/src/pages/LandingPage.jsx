@@ -289,40 +289,31 @@ const LandingPage = () => {
           
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            {/* Enter button - to try the demo */}
-            <div className="relative">
-              {/* Subtle pulsing glow behind button */}
-              <div 
-                className="absolute inset-0 rounded-full opacity-60"
-                style={{
-                  background: 'radial-gradient(circle, rgba(143, 236, 120, 0.3) 0%, transparent 70%)',
-                  filter: 'blur(20px)',
-                  animation: 'pulse 2.5s ease-in-out infinite',
-                }}
-              />
-              <button
-                onClick={handleEnter}
-                className="relative flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
-                style={{
-                  background: 'linear-gradient(135deg, #8FEC78 0%, #5AC94B 100%)',
-                  color: '#000',
-                  boxShadow: '0 0 20px rgba(143, 236, 120, 0.3)',
-                }}
-              >
-                <Play size={16} fill="#000" />
-                <span>Meet Mia</span>
-              </button>
-            </div>
+            {/* Meet Mia button */}
+            <button
+              onClick={handleEnter}
+              className="relative flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%)',
+                color: '#8FEC78',
+                border: '1px solid rgba(143, 236, 120, 0.4)',
+                boxShadow: '0 0 30px rgba(143, 236, 120, 0.25), inset 0 0 20px rgba(143, 236, 120, 0.1)',
+              }}
+            >
+              <Play size={16} fill="#8FEC78" />
+              <span>Meet Mia</span>
+            </button>
             
             {/* Sign In / Go to Sessions button */}
             {isAuthenticated ? (
               <Link
                 to="/sessions"
-                className="flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'rgba(255, 255, 255, 0.8)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: '0 0 20px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.03)',
                 }}
               >
                 <span>Go to Sessions</span>
@@ -331,11 +322,12 @@ const LandingPage = () => {
             ) : (
               <Link
                 to="/signin"
-                className="flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'rgba(255, 255, 255, 0.8)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: '0 0 20px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.03)',
                 }}
               >
                 <LogIn size={16} />
