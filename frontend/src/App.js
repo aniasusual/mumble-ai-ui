@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import SessionsPage from "./pages/SessionsPage";
+import ChatPage from "./pages/ChatPage";
 
 function App() {
   return (
@@ -38,6 +39,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SessionsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/sessions/:sessionId/chat" 
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
                 </ProtectedRoute>
               } 
             />
