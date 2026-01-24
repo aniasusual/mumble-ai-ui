@@ -549,10 +549,16 @@ async def update_session(
     update_data = {}
     if input.title is not None:
         update_data["title"] = input.title
+    if input.language is not None:
+        update_data["language"] = input.language
+    if input.level is not None:
+        update_data["level"] = input.level
     if input.status is not None:
         update_data["status"] = input.status
     if input.notes is not None:
         update_data["notes"] = input.notes
+    if input.chat_history is not None:
+        update_data["chat_history"] = input.chat_history
     
     if update_data:
         update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
