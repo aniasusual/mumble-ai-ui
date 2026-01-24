@@ -73,17 +73,8 @@ const SessionsPage = () => {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  
-  // New session form
-  const [newSession, setNewSession] = useState({
-    title: '',
-    language: 'spanish',
-    level: 'beginner',
-    duration_minutes: 30,
-  });
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
