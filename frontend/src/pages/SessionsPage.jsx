@@ -417,38 +417,50 @@ const SessionsPage = () => {
         {/* Settings Modal */}
         <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
           <DialogContent
-            className="sm:max-w-sm border-0 p-0 overflow-hidden"
+            className="sm:max-w-md border-0 p-0 overflow-hidden"
             style={{ background: 'transparent' }}
           >
             <div 
-              className="p-6"
+              className="p-8 rounded-3xl"
               style={{
-                background: 'rgba(0, 0, 0, 0.9)',
-                backdropFilter: 'blur(40px)',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             >
               <DialogHeader>
-                <DialogTitle className="text-lg font-semibold text-white mb-6">
+                <DialogTitle className="text-xl font-semibold text-white mb-8">
                   Settings
                 </DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4">
                 <div 
-                  className="p-4 rounded-xl"
-                  style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                  className="p-5 rounded-xl"
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                  }}
                 >
-                  <p className="text-white/30 text-sm">
+                  <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
                     More settings coming soon
                   </p>
                 </div>
                 
                 <button
                   onClick={handleLogout}
-                  className="w-full h-11 rounded-xl text-sm font-medium transition-all hover:bg-red-500/20 flex items-center justify-center gap-2"
+                  className="w-full h-12 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                   style={{
-                    background: 'rgba(239, 68, 68, 0.1)',
+                    background: 'rgba(239, 68, 68, 0.12)',
                     color: '#EF4444',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
                   }}
                 >
                   <LogOut className="w-4 h-4" />
