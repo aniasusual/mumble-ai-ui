@@ -255,8 +255,9 @@ const SessionsPage = () => {
               
               {/* New Session Button - Pill glow style */}
               <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                onClick={handleCreateSession}
+                disabled={isCreating}
+                className="flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                 style={{
                   background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)',
                   color: '#8FEC78',
@@ -264,8 +265,14 @@ const SessionsPage = () => {
                   boxShadow: '0 0 30px rgba(143, 236, 120, 0.15)',
                 }}
               >
-                <Plus className="w-5 h-5" />
-                New Session
+                {isCreating ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    New Session
+                  </>
+                )}
               </button>
             </div>
 
