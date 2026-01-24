@@ -314,26 +314,30 @@ class LearningSession(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
-    title: str
-    language: str
-    level: str = "beginner"  # beginner, intermediate, advanced
+    title: Optional[str] = None
+    language: Optional[str] = None
+    level: Optional[str] = None
     duration_minutes: int = 30
     status: str = "active"  # active, completed, paused
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     notes: Optional[str] = None
+    chat_history: Optional[List[dict]] = None
 
 class SessionCreate(BaseModel):
-    title: str
-    language: str
-    level: str = "beginner"
+    title: Optional[str] = None
+    language: Optional[str] = None
+    level: Optional[str] = None
     duration_minutes: int = 30
     notes: Optional[str] = None
 
 class SessionUpdate(BaseModel):
     title: Optional[str] = None
+    language: Optional[str] = None
+    level: Optional[str] = None
     status: Optional[str] = None
     notes: Optional[str] = None
+    chat_history: Optional[List[dict]] = None
 
 
 # ==================== AUTH HELPERS ====================
