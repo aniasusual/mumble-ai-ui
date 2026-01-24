@@ -135,10 +135,10 @@ const SessionsPage = () => {
         {/* Minimal Header */}
         <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
           <nav className="max-w-5xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <MumbleLogo size={32} color="#ffffff" />
               <span className="font-medium text-lg text-white">mumble</span>
-            </div>
+            </Link>
             
             {/* Minimal Profile Button */}
             <DropdownMenu>
