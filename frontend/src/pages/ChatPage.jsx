@@ -47,7 +47,6 @@ const ChatPage = () => {
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
-  const historyEndRef = useRef(null);
 
   // Fetch session data
   useEffect(() => {
