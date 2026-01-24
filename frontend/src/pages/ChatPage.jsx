@@ -290,19 +290,10 @@ const ChatPage = () => {
               >
                 <ArrowLeft className="w-5 h-5 text-white/70" />
               </Link>
-              <div className="flex items-center gap-3">
+              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <MumbleLogo size={32} color="#ffffff" isAnimating={isSpeaking} />
-                <div>
-                  <h1 className="text-white font-medium text-sm">
-                    {session?.title || 'New Session'}
-                  </h1>
-                  {session?.language && (
-                    <p className="text-white/40 text-xs">
-                      {session.language} • {session.level || 'Getting started'}
-                    </p>
-                  )}
-                </div>
-              </div>
+                <span className="font-medium text-lg text-white hidden sm:block">mumble</span>
+              </Link>
             </div>
             
             <div className="flex items-center gap-2">
