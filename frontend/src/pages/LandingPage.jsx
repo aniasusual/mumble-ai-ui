@@ -348,7 +348,7 @@ const LandingPage = () => {
             className="mt-6 text-xs"
             style={{ color: 'rgba(255, 255, 255, 0.25)' }}
           >
-            tap "Try Demo" to enable audio experience
+            tap "Meet Mia" to enable audio experience
           </p>
         </div>
         
