@@ -257,30 +257,15 @@ const SessionsPage = () => {
                       onClick={() => navigate(`/sessions/${session.id}/chat`)}
                       className="group flex items-center justify-between py-4 px-4 -mx-4 rounded-xl cursor-pointer transition-all hover:bg-white/5"
                     >
-                      <div className="flex items-center gap-4 min-w-0">
-                        {/* Language Flag or Placeholder */}
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                          }}
-                        >
-                          {language ? (
-                            <span className="text-lg">{language.flag}</span>
-                          ) : (
-                            <span className="text-lg">💬</span>
-                          )}
-                        </div>
-                        
+                      <div className="min-w-0">
                         {/* Session Info */}
-                        <div className="min-w-0">
-                          <h3 className="text-white font-medium truncate">
-                            {session.title || 'New Session'}
-                          </h3>
-                          <p className="text-white/40 text-sm truncate">
-                            {language ? language.label : 'Getting started'}
-                            {session.level && ` · ${session.level}`}
-                          </p>
-                        </div>
+                        <h3 className="text-white font-medium truncate">
+                          {session.title || 'New Session'}
+                        </h3>
+                        <p className="text-white/40 text-sm truncate">
+                          {language ? language.label : 'Getting started'}
+                          {session.level && ` · ${session.level}`}
+                        </p>
                       </div>
                       
                       {/* Right Side */}
