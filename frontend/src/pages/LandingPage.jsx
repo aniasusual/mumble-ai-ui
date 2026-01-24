@@ -254,7 +254,7 @@ const LandingPage = () => {
           className={`min-h-screen flex flex-col items-center justify-center transition-opacity duration-1000 px-6 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         >
           {/* Logo and brand */}
-          <div className="flex items-center gap-3 mb-8">
+          <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
             <MumbleLogo size={48} color="#ffffff" />
             <span 
               className="font-medium text-2xl tracking-tight"
@@ -262,7 +262,7 @@ const LandingPage = () => {
             >
               {appInfo.name}
             </span>
-          </div>
+          </Link>
           
           {/* Tagline */}
           <h1 
