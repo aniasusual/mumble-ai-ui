@@ -15,9 +15,9 @@ const MeshGradientBackground = ({ children }) => {
       <div className="absolute inset-0 overflow-hidden">
         {/* Green blob - top right */}
         <div 
-          className="absolute w-[800px] h-[800px] rounded-full opacity-60 blur-[120px]"
+          className="absolute w-[700px] h-[700px] rounded-full opacity-40 blur-[120px]"
           style={{
-            background: 'radial-gradient(circle, rgba(143, 236, 120, 1) 0%, rgba(143, 236, 120, 0.4) 40%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(143, 236, 120, 0.8) 0%, rgba(143, 236, 120, 0.2) 40%, transparent 70%)',
             top: '-20%',
             right: '-15%',
             animation: 'meshFloat1 20s ease-in-out infinite',
@@ -26,9 +26,9 @@ const MeshGradientBackground = ({ children }) => {
         
         {/* Blue blob - bottom left */}
         <div 
-          className="absolute w-[700px] h-[700px] rounded-full opacity-50 blur-[100px]"
+          className="absolute w-[600px] h-[600px] rounded-full opacity-35 blur-[100px]"
           style={{
-            background: 'radial-gradient(circle, rgba(74, 144, 217, 1) 0%, rgba(74, 144, 217, 0.4) 40%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(74, 144, 217, 0.8) 0%, rgba(74, 144, 217, 0.2) 40%, transparent 70%)',
             bottom: '-15%',
             left: '-15%',
             animation: 'meshFloat2 25s ease-in-out infinite',
@@ -37,9 +37,9 @@ const MeshGradientBackground = ({ children }) => {
         
         {/* Purple blob - center */}
         <div 
-          className="absolute w-[600px] h-[600px] rounded-full opacity-40 blur-[90px]"
+          className="absolute w-[500px] h-[500px] rounded-full opacity-25 blur-[90px]"
           style={{
-            background: 'radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0.3) 50%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.7) 0%, rgba(168, 85, 247, 0.2) 50%, transparent 70%)',
             top: '30%',
             left: '25%',
             animation: 'meshFloat3 18s ease-in-out infinite',
@@ -48,9 +48,9 @@ const MeshGradientBackground = ({ children }) => {
         
         {/* Teal blob - top left */}
         <div 
-          className="absolute w-[500px] h-[500px] rounded-full opacity-45 blur-[80px]"
+          className="absolute w-[400px] h-[400px] rounded-full opacity-30 blur-[80px]"
           style={{
-            background: 'radial-gradient(circle, rgba(45, 212, 191, 1) 0%, rgba(45, 212, 191, 0.3) 50%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(45, 212, 191, 0.7) 0%, rgba(45, 212, 191, 0.2) 50%, transparent 70%)',
             top: '5%',
             left: '5%',
             animation: 'meshFloat4 22s ease-in-out infinite',
@@ -59,9 +59,9 @@ const MeshGradientBackground = ({ children }) => {
         
         {/* Pink blob - bottom right */}
         <div 
-          className="absolute w-[650px] h-[650px] rounded-full opacity-45 blur-[100px]"
+          className="absolute w-[550px] h-[550px] rounded-full opacity-30 blur-[100px]"
           style={{
-            background: 'radial-gradient(circle, rgba(244, 114, 182, 1) 0%, rgba(244, 114, 182, 0.3) 50%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(244, 114, 182, 0.7) 0%, rgba(244, 114, 182, 0.2) 50%, transparent 70%)',
             bottom: '5%',
             right: '0%',
             animation: 'meshFloat5 28s ease-in-out infinite',
@@ -70,9 +70,9 @@ const MeshGradientBackground = ({ children }) => {
         
         {/* Extra orange/yellow blob - center right */}
         <div 
-          className="absolute w-[450px] h-[450px] rounded-full opacity-35 blur-[90px]"
+          className="absolute w-[350px] h-[350px] rounded-full opacity-20 blur-[90px]"
           style={{
-            background: 'radial-gradient(circle, rgba(251, 191, 36, 1) 0%, rgba(251, 146, 60, 0.3) 50%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(251, 191, 36, 0.7) 0%, rgba(251, 146, 60, 0.2) 50%, transparent 70%)',
             top: '50%',
             right: '20%',
             animation: 'meshFloat6 24s ease-in-out infinite',
