@@ -317,7 +317,6 @@ const SessionsPage = () => {
                     boxShadow: '0 0 40px rgba(143, 236, 120, 0.2)',
                   }}
                 >
-                  <Sparkles className="w-5 h-5" />
                   Create Your First Session
                 </button>
               </div>
