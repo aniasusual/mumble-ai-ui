@@ -299,8 +299,9 @@ const SessionsPage = () => {
                   Create your first learning session and start your language journey with Mia
                 </p>
                 <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  onClick={handleCreateSession}
+                  disabled={isCreating}
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                   style={{
                     background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)',
                     color: '#8FEC78',
@@ -308,7 +309,11 @@ const SessionsPage = () => {
                     boxShadow: '0 0 40px rgba(143, 236, 120, 0.2)',
                   }}
                 >
-                  Create Your First Session
+                  {isCreating ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    'Create Your First Session'
+                  )}
                 </button>
               </div>
             ) : (
