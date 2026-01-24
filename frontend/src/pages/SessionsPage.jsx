@@ -350,55 +350,63 @@ const SessionsPage = () => {
         {/* Profile Modal */}
         <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
           <DialogContent
-            className="sm:max-w-sm border-0 p-0 overflow-hidden"
+            className="sm:max-w-md border-0 p-0 overflow-hidden"
             style={{ background: 'transparent' }}
           >
             <div 
-              className="p-6"
+              className="p-8 rounded-3xl"
               style={{
-                background: 'rgba(0, 0, 0, 0.9)',
-                backdropFilter: 'blur(40px)',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             >
               <DialogHeader>
-                <DialogTitle className="text-lg font-semibold text-white mb-6">
+                <DialogTitle className="text-xl font-semibold text-white mb-8">
                   Profile
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-8">
                 <div 
-                  className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-medium"
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-medium"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    background: 'rgba(255, 255, 255, 0.12)',
+                    color: 'rgba(255, 255, 255, 0.9)',
                   }}
                 >
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div>
-                  <h3 className="text-white font-medium">{user?.name}</h3>
-                  <p className="text-white/40 text-sm">{user?.email}</p>
+                  <h3 className="text-white font-medium text-lg">{user?.name}</h3>
+                  <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{user?.email}</p>
                 </div>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-xs text-white/40 mb-1.5 block">Name</label>
+                  <label className="text-xs mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Name</label>
                   <Input
                     value={user?.name || ''}
                     disabled
-                    className="h-11 rounded-xl text-white/50 text-sm border-0"
-                    style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                    className="h-12 rounded-xl text-sm border-0"
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-white/40 mb-1.5 block">Email</label>
+                  <label className="text-xs mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Email</label>
                   <Input
                     value={user?.email || ''}
                     disabled
-                    className="h-11 rounded-xl text-white/50 text-sm border-0"
-                    style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                    className="h-12 rounded-xl text-sm border-0"
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                    }}
                   />
                 </div>
               </div>
