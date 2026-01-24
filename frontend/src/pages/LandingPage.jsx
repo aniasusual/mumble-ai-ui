@@ -583,10 +583,12 @@ const LandingPage = () => {
                   </p>
                   <Link
                     to="/sessions"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all hover:scale-105"
+                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105"
                     style={{
-                      background: 'linear-gradient(135deg, #8FEC78 0%, #5AC94B 100%)',
-                      color: '#000',
+                      background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%)',
+                      color: '#8FEC78',
+                      border: '1px solid rgba(143, 236, 120, 0.4)',
+                      boxShadow: '0 0 30px rgba(143, 236, 120, 0.25), inset 0 0 20px rgba(143, 236, 120, 0.1)',
                     }}
                   >
                     Go to Sessions
@@ -601,10 +603,12 @@ const LandingPage = () => {
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <Link
                       to="/signup"
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all hover:scale-105"
+                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105"
                       style={{
-                        background: 'linear-gradient(135deg, #8FEC78 0%, #5AC94B 100%)',
-                        color: '#000',
+                        background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%)',
+                        color: '#8FEC78',
+                        border: '1px solid rgba(143, 236, 120, 0.4)',
+                        boxShadow: '0 0 30px rgba(143, 236, 120, 0.25), inset 0 0 20px rgba(143, 236, 120, 0.1)',
                       }}
                     >
                       Get Started
@@ -612,10 +616,12 @@ const LandingPage = () => {
                     </Link>
                     <Link
                       to="/signin"
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all hover:bg-white/10"
+                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105"
                       style={{
-                        color: 'rgba(255, 255, 255, 0.7)',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        color: 'rgba(255, 255, 255, 0.8)',
                         border: '1px solid rgba(255, 255, 255, 0.15)',
+                        boxShadow: '0 0 20px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.03)',
                       }}
                     >
                       Sign In
