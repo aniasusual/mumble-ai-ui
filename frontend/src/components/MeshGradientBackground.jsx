@@ -7,7 +7,7 @@ const MeshGradientBackground = ({ children }) => {
       <div 
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3), transparent)',
+          background: 'radial-gradient(ellipse 100% 80% at 50% -30%, rgba(120, 119, 198, 0.4), transparent)',
         }}
       />
       
