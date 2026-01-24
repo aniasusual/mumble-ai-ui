@@ -18,13 +18,6 @@ import {
   DialogTitle,
 } from '../components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
-import {
   Plus,
   User,
   Settings,
@@ -37,7 +30,6 @@ import {
   Loader2,
   ChevronDown,
   Play,
-  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
