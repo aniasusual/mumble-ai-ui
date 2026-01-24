@@ -134,7 +134,7 @@ const SessionsPage = () => {
       <div className="min-h-screen flex flex-col">
         {/* Minimal Header */}
         <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
-          <nav className="max-w-3xl mx-auto flex items-center justify-between">
+          <nav className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MumbleLogo size={32} color="#ffffff" />
               <span className="font-medium text-lg text-white">mumble</span>
