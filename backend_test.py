@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://repo-inspector-70.preview.emergentagent.com/api"
+BASE_URL = "https://mumble-learn.preview.emergentagent.com/api"
 TEST_USER_EMAIL = f"testuser_{uuid.uuid4().hex[:8]}@example.com"
 TEST_USER_PASSWORD = "securepassword123"
 TEST_USER_NAME = "Test User"
