@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import MeshGradientBackground from '../components/MeshGradientBackground';
 import MumbleLogo from '../components/MumbleLogo';
 import { useAuth } from '../context/AuthContext';
