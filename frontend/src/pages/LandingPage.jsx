@@ -310,7 +310,7 @@ const LandingPage = () => {
                 }}
               >
                 <Play size={16} fill="#000" />
-                <span>Try Demo</span>
+                <span>Meet Mia</span>
               </button>
             </div>
             
