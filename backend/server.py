@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi.responses import Response
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,9 +10,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from emergentintegrations.llm.openai import OpenAITextToSpeech
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+import jwt
+from passlib.context import CryptContext
 
 
 ROOT_DIR = Path(__file__).parent
@@ -21,6 +24,17 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# JWT Configuration
+JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key')
+JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
+JWT_EXPIRATION_HOURS = int(os.environ.get('JWT_EXPIRATION_HOURS', 24))
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Security
+security = HTTPBearer()
 
 # Initialize TTS
 tts = OpenAITextToSpeech(api_key=os.getenv("EMERGENT_LLM_KEY"))
@@ -229,9 +243,10 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
+# ==================== MODELS ====================
+
 class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+    model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     client_name: str
@@ -242,7 +257,7 @@ class StatusCheckCreate(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "nova"  # Energetic, upbeat - perfect for AI tutor
+    voice: str = "nova"
     speed: float = 1.0
 
 class WaitlistEntry(BaseModel):
@@ -263,12 +278,309 @@ class ChatResponse(BaseModel):
     response: str
     session_id: str
 
-# Add your routes to the router instead of directly to app
+# ==================== AUTH MODELS ====================
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=6)
+    name: str = Field(min_length=1)
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    email: str
+    name: str
+    avatar_url: Optional[str] = None
+    created_at: datetime
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+# ==================== SESSION MODELS ====================
+
+class LearningSession(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    title: str
+    language: str
+    level: str = "beginner"  # beginner, intermediate, advanced
+    duration_minutes: int = 30
+    status: str = "active"  # active, completed, paused
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    notes: Optional[str] = None
+
+class SessionCreate(BaseModel):
+    title: str
+    language: str
+    level: str = "beginner"
+    duration_minutes: int = 30
+    notes: Optional[str] = None
+
+class SessionUpdate(BaseModel):
+    title: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+# ==================== AUTH HELPERS ====================
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(user_id: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+    payload = {
+        "sub": user_id,
+        "exp": expire,
+        "iat": datetime.now(timezone.utc)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload.get("sub")
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_id = decode_token(token)
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return user
+
+
+# ==================== AUTH ENDPOINTS ====================
+
+@api_router.post("/auth/register", response_model=TokenResponse)
+async def register(input: UserCreate):
+    # Check if user exists
+    existing = await db.users.find_one({"email": input.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "email": input.email,
+        "name": input.name,
+        "password_hash": hash_password(input.password),
+        "avatar_url": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create token
+    token = create_access_token(user_id)
+    
+    return TokenResponse(
+        access_token=token,
+        user=UserResponse(
+            id=user_id,
+            email=input.email,
+            name=input.name,
+            avatar_url=None,
+            created_at=datetime.now(timezone.utc)
+        )
+    )
+
+@api_router.post("/auth/login", response_model=TokenResponse)
+async def login(input: UserLogin):
+    user = await db.users.find_one({"email": input.email})
+    
+    if not user or not verify_password(input.password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    token = create_access_token(user["id"])
+    
+    created_at = user["created_at"]
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at)
+    
+    return TokenResponse(
+        access_token=token,
+        user=UserResponse(
+            id=user["id"],
+            email=user["email"],
+            name=user["name"],
+            avatar_url=user.get("avatar_url"),
+            created_at=created_at
+        )
+    )
+
+@api_router.get("/auth/me", response_model=UserResponse)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    created_at = current_user["created_at"]
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at)
+    
+    return UserResponse(
+        id=current_user["id"],
+        email=current_user["email"],
+        name=current_user["name"],
+        avatar_url=current_user.get("avatar_url"),
+        created_at=created_at
+    )
+
+@api_router.put("/auth/me", response_model=UserResponse)
+async def update_me(input: UserUpdate, current_user: dict = Depends(get_current_user)):
+    update_data = {}
+    if input.name is not None:
+        update_data["name"] = input.name
+    if input.avatar_url is not None:
+        update_data["avatar_url"] = input.avatar_url
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"id": current_user["id"]})
+    created_at = updated_user["created_at"]
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at)
+    
+    return UserResponse(
+        id=updated_user["id"],
+        email=updated_user["email"],
+        name=updated_user["name"],
+        avatar_url=updated_user.get("avatar_url"),
+        created_at=created_at
+    )
+
+
+# ==================== SESSION ENDPOINTS ====================
+
+@api_router.get("/sessions", response_model=List[LearningSession])
+async def get_sessions(current_user: dict = Depends(get_current_user)):
+    sessions = await db.sessions.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    for session in sessions:
+        if isinstance(session.get("created_at"), str):
+            session["created_at"] = datetime.fromisoformat(session["created_at"])
+        if isinstance(session.get("updated_at"), str):
+            session["updated_at"] = datetime.fromisoformat(session["updated_at"])
+    
+    return sessions
+
+@api_router.post("/sessions", response_model=LearningSession)
+async def create_session(input: SessionCreate, current_user: dict = Depends(get_current_user)):
+    session = LearningSession(
+        user_id=current_user["id"],
+        title=input.title,
+        language=input.language,
+        level=input.level,
+        duration_minutes=input.duration_minutes,
+        notes=input.notes
+    )
+    
+    doc = session.model_dump()
+    doc["created_at"] = doc["created_at"].isoformat()
+    doc["updated_at"] = doc["updated_at"].isoformat()
+    
+    await db.sessions.insert_one(doc)
+    return session
+
+@api_router.get("/sessions/{session_id}", response_model=LearningSession)
+async def get_session(session_id: str, current_user: dict = Depends(get_current_user)):
+    session = await db.sessions.find_one(
+        {"id": session_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if isinstance(session.get("created_at"), str):
+        session["created_at"] = datetime.fromisoformat(session["created_at"])
+    if isinstance(session.get("updated_at"), str):
+        session["updated_at"] = datetime.fromisoformat(session["updated_at"])
+    
+    return session
+
+@api_router.put("/sessions/{session_id}", response_model=LearningSession)
+async def update_session(
+    session_id: str,
+    input: SessionUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    session = await db.sessions.find_one(
+        {"id": session_id, "user_id": current_user["id"]}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    update_data = {}
+    if input.title is not None:
+        update_data["title"] = input.title
+    if input.status is not None:
+        update_data["status"] = input.status
+    if input.notes is not None:
+        update_data["notes"] = input.notes
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.sessions.update_one({"id": session_id}, {"$set": update_data})
+    
+    updated = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    
+    if isinstance(updated.get("created_at"), str):
+        updated["created_at"] = datetime.fromisoformat(updated["created_at"])
+    if isinstance(updated.get("updated_at"), str):
+        updated["updated_at"] = datetime.fromisoformat(updated["updated_at"])
+    
+    return updated
+
+@api_router.delete("/sessions/{session_id}")
+async def delete_session(session_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.sessions.delete_one(
+        {"id": session_id, "user_id": current_user["id"]}
+    )
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    return {"message": "Session deleted"}
+
+
+# ==================== EXISTING ENDPOINTS ====================
+
 @api_router.get("/")
 async def root():
     return {"message": "Hello World"}
 
-# TTS endpoint
 @api_router.post("/tts")
 async def generate_speech(request: TTSRequest):
     try:
@@ -284,10 +596,8 @@ async def generate_speech(request: TTSRequest):
         logging.error(f"TTS error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"TTS generation failed: {str(e)}")
 
-# Waitlist endpoints
 @api_router.post("/waitlist", response_model=WaitlistEntry)
 async def join_waitlist(input: WaitlistCreate):
-    # Check if email already exists
     existing = await db.waitlist.find_one({"email": input.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already on waitlist")
@@ -304,13 +614,11 @@ async def check_waitlist(email: str):
     existing = await db.waitlist.find_one({"email": email})
     return {"exists": existing is not None}
 
-# Chat endpoint - conversation with Mia
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_with_mia(request: ChatRequest):
     try:
         session_id = request.session_id
         
-        # Get or create chat session
         if session_id not in chat_sessions:
             chat_sessions[session_id] = LlmChat(
                 api_key=os.getenv("EMERGENT_LLM_KEY"),
@@ -319,8 +627,6 @@ async def chat_with_mia(request: ChatRequest):
             ).with_model("openai", "gpt-4.1-mini")
         
         chat = chat_sessions[session_id]
-        
-        # Send message and get response
         user_message = UserMessage(text=request.message)
         response = await chat.send_message(user_message)
         
@@ -329,13 +635,11 @@ async def chat_with_mia(request: ChatRequest):
         logging.error(f"Chat error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
-# Combined chat + TTS endpoint for voice responses
 @api_router.post("/chat-voice")
 async def chat_with_voice(request: ChatRequest):
     try:
         session_id = request.session_id
         
-        # Get or create chat session
         if session_id not in chat_sessions:
             chat_sessions[session_id] = LlmChat(
                 api_key=os.getenv("EMERGENT_LLM_KEY"),
@@ -344,12 +648,9 @@ async def chat_with_voice(request: ChatRequest):
             ).with_model("openai", "gpt-4.1-mini")
         
         chat = chat_sessions[session_id]
-        
-        # Send message and get response
         user_message = UserMessage(text=request.message)
         text_response = await chat.send_message(user_message)
         
-        # Generate speech from response
         audio_bytes = await tts.generate_speech(
             text=text_response,
             model="tts-1",
@@ -358,7 +659,6 @@ async def chat_with_voice(request: ChatRequest):
             response_format="mp3"
         )
         
-        # Return both text and audio
         import base64
         audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
         
@@ -376,7 +676,6 @@ async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()
     status_obj = StatusCheck(**status_dict)
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
     doc = status_obj.model_dump()
     doc['timestamp'] = doc['timestamp'].isoformat()
     
@@ -385,10 +684,8 @@ async def create_status_check(input: StatusCheckCreate):
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
     status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
     
-    # Convert ISO string timestamps back to datetime objects
     for check in status_checks:
         if isinstance(check['timestamp'], str):
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
