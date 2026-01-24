@@ -82,12 +82,7 @@ const SessionsPage = () => {
     setIsCreating(true);
     
     try {
-      const response = await axios.post(`${API}/sessions`, {
-        title: 'New Session',
-        language: 'spanish',
-        level: 'beginner',
-        duration_minutes: 30,
-      });
+      const response = await axios.post(`${API}/sessions`, {});
       setSessions([response.data, ...sessions]);
       // Navigate to chat page
       navigate(`/sessions/${response.data.id}/chat`);
