@@ -96,33 +96,24 @@ const SessionsPage = () => {
     fetchSessions();
   }, [fetchSessions]);
 
-  // Create new session
-  const handleCreateSession = async (e) => {
-    e.preventDefault();
-    
-    if (!newSession.title.trim()) {
-      toast.error('Please enter a session title');
-      return;
-    }
+  // Create new session instantly
+  const handleCreateSession = async () => {
+    if (isCreating) return;
     
     setIsCreating(true);
     
     try {
-      const response = await axios.post(`${API}/sessions`, newSession);
-      setSessions([response.data, ...sessions]);
-      setShowCreateModal(false);
-      setNewSession({
-        title: '',
+      const response = await axios.post(`${API}/sessions`, {
+        title: 'New Session',
         language: 'spanish',
         level: 'beginner',
         duration_minutes: 30,
       });
-      toast.success('Session created!');
+      setSessions([response.data, ...sessions]);
       // Navigate to chat page
       navigate(`/sessions/${response.data.id}/chat`);
     } catch (error) {
       toast.error('Failed to create session');
-    } finally {
       setIsCreating(false);
     }
   };
