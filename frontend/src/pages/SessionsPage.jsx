@@ -294,7 +294,7 @@ const SessionsPage = () => {
               /* Sessions Grid */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {sessions.map((session) => {
-                  const language = getLanguageInfo(session.language);
+                  const language = session.language ? getLanguageInfo(session.language) : null;
                   const statusStyles = getStatusStyles(session.status);
                   return (
                     <div
@@ -340,8 +340,14 @@ const SessionsPage = () => {
                       {/* Language & Status */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl">{language.flag}</span>
-                          <span className="text-sm text-white/50">{language.label}</span>
+                          {language ? (
+                            <>
+                              <span className="text-2xl">{language.flag}</span>
+                              <span className="text-sm text-white/50">{language.label}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-white/30">Language not set</span>
+                          )}
                         </div>
                         <span 
                           className="px-3 py-1 rounded-full text-xs font-medium"
@@ -357,20 +363,26 @@ const SessionsPage = () => {
 
                       {/* Title */}
                       <h3 className="text-lg font-semibold text-white mb-4 pr-8">
-                        {session.title}
+                        {session.title || 'New Session'}
                       </h3>
 
                       {/* Meta Info */}
-                      <div className="flex items-center gap-4 text-sm text-white/30 mb-4">
-                        <div className="flex items-center gap-1.5">
-                          <Globe className="w-4 h-4" />
-                          <span className="capitalize">{session.level}</span>
+                      {(session.level || session.duration_minutes) && (
+                        <div className="flex items-center gap-4 text-sm text-white/30 mb-4">
+                          {session.level && (
+                            <div className="flex items-center gap-1.5">
+                              <Globe className="w-4 h-4" />
+                              <span className="capitalize">{session.level}</span>
+                            </div>
+                          )}
+                          {session.duration_minutes && (
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-4 h-4" />
+                              <span>{session.duration_minutes} min</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4" />
-                          <span>{session.duration_minutes} min</span>
-                        </div>
-                      </div>
+                      )}
 
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-4 border-t border-white/5">
