@@ -6,12 +6,6 @@ import LiquidOrb from '../components/LiquidOrb';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/ui/input';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
-import {
   ArrowLeft,
   Send,
   Mic,
@@ -19,7 +13,6 @@ import {
   VolumeX,
   Loader2,
   MessageSquare,
-  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
