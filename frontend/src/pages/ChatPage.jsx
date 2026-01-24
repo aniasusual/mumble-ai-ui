@@ -132,13 +132,6 @@ const ChatPage = () => {
     };
   }, []);
 
-  // Scroll to bottom of history
-  useEffect(() => {
-    if (showHistory) {
-      historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [showHistory, messages]);
-
   // Play audio from base64
   const playAudioFromBase64 = useCallback((base64Audio) => {
     if (isMuted || !audioRef.current) return;
