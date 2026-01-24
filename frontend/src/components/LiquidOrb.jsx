@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-const LiquidOrb = ({ isSpeaking = false, className = "" }) => {
+const LiquidOrb = ({ isSpeaking = false, size = "default", className = "" }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
   const [audioLevel, setAudioLevel] = useState(0);
   const animationRef = useRef(null);
+  
+  // Size configurations
+  const sizeClasses = {
+    default: "w-40 h-40 md:w-52 md:h-52",
+    large: "w-56 h-56 md:w-72 md:h-72",
+    xlarge: "w-64 h-64 md:w-80 md:h-80",
+  };
+  
+  const orbSize = sizeClasses[size] || sizeClasses.default;
   
   // Track mouse position for subtle interaction
   const handleMouseMove = useCallback((e) => {
