@@ -354,9 +354,9 @@ const ChatPage = () => {
 
         {/* Main Content - Landing Page Style */}
         <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-32">
-          {/* Liquid Orb */}
+          {/* Liquid Orb - Large size for chat page */}
           <div className="mb-8">
-            <LiquidOrb isSpeaking={isSpeaking || isListening} />
+            <LiquidOrb isSpeaking={isSpeaking || isListening} size="large" />
           </div>
 
           {/* Response Display - Like Landing Page */}
