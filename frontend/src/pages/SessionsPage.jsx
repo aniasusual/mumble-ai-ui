@@ -127,6 +127,8 @@ const SessionsPage = () => {
         duration_minutes: 30,
       });
       toast.success('Session created!');
+      // Navigate to chat page
+      navigate(`/sessions/${response.data.id}/chat`);
     } catch (error) {
       toast.error('Failed to create session');
     } finally {
