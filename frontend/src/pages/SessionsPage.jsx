@@ -153,35 +153,70 @@ const SessionsPage = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-52 mt-3 p-3 rounded-2xl border-0 shadow-none"
+                className="w-52 mt-3 p-3 rounded-2xl border-0"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  backdropFilter: 'blur(40px)',
-                  WebkitBackdropFilter: 'blur(40px)',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
                 }}
               >
-                <div className="mb-3">
+                <div className="mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
                   <p className="text-sm font-medium text-white">{user?.name}</p>
-                  <p className="text-xs text-white/40 truncate">{user?.email}</p>
+                  <p className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{user?.email}</p>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <DropdownMenuItem 
                     onClick={() => setShowProfileModal(true)}
-                    className="text-white/50 hover:text-white hover:bg-transparent rounded-xl cursor-pointer text-sm py-2 px-0 focus:bg-transparent focus:text-white"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-white/5 focus:text-white"
+                    style={{ 
+                      color: 'rgba(255, 255, 255, 0.6)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                    }}
                   >
                     <User className="w-4 h-4 mr-3" />
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setShowSettingsModal(true)}
-                    className="text-white/50 hover:text-white hover:bg-transparent rounded-xl cursor-pointer text-sm py-2 px-0 focus:bg-transparent focus:text-white"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-white/5 focus:text-white"
+                    style={{ 
+                      color: 'rgba(255, 255, 255, 0.6)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                    }}
                   >
                     <Settings className="w-4 h-4 mr-3" />
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleLogout}
-                    className="text-white/50 hover:text-red-400 hover:bg-transparent rounded-xl cursor-pointer text-sm py-2 px-0 focus:bg-transparent focus:text-red-400"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-red-500/10 focus:text-red-400"
+                    style={{ 
+                      color: 'rgba(255, 255, 255, 0.6)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                      e.currentTarget.style.color = '#EF4444';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                    }}
                   >
                     <LogOut className="w-4 h-4 mr-3" />
                     Log out
