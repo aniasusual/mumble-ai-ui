@@ -154,7 +154,7 @@ const LiquidOrb = ({ isSpeaking = false, size = "default", className = "" }) => 
       
       {/* Main liquid orb */}
       <div 
-        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative w-40 h-40 md:w-52 md:h-52`}
+        className={`liquid-orb ${isSpeaking ? 'speaking' : ''} relative ${orbSize}`}
         style={{
           borderRadius: isSpeaking ? '50%' : undefined,
           background: isSpeaking 
