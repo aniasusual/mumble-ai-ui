@@ -16,14 +16,15 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { sendMessageToAgent } from '../services/agentService';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ChatPage = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   
   // Session data
   const [session, setSession] = useState(null);
@@ -33,8 +34,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
-  const [currentResponse, setCurrentResponse] = useState('');
-  const [chatSessionId, setChatSessionId] = useState(() => `chat-${sessionId}-${Date.now()}`);
+  const [agentSessionId, setAgentSessionId] = useState(null);
   
   // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -43,10 +43,7 @@ const ChatPage = () => {
   // Voice input states
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  
-  // Input focus state
-  const [inputFocused, setInputFocused] = useState(false);
-  
+
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
@@ -57,15 +54,15 @@ const ChatPage = () => {
       try {
         const response = await axios.get(`${API}/sessions/${sessionId}`);
         setSession(response.data);
+
+        // Restore AgentOS session ID if it exists
+        if (response.data.agent_session_id) {
+          setAgentSessionId(response.data.agent_session_id);
+        }
+
         // Load existing chat history if available
         if (response.data.chat_history) {
           setMessages(response.data.chat_history);
-          if (response.data.chat_history.length > 0) {
-            const lastAssistantMsg = [...response.data.chat_history].reverse().find(m => m.role === 'assistant');
-            if (lastAssistantMsg) {
-              setCurrentResponse(lastAssistantMsg.content);
-            }
-          }
         }
       } catch (error) {
         console.error('Failed to fetch session:', error);
@@ -75,16 +72,23 @@ const ChatPage = () => {
         setIsLoadingSession(false);
       }
     };
-    
+
     fetchSession();
   }, [sessionId, navigate]);
 
   // Save chat history to session
-  const saveChatHistory = useCallback(async (newMessages) => {
+  const saveChatHistory = useCallback(async (newMessages, agentSessId = null) => {
     try {
-      await axios.put(`${API}/sessions/${sessionId}`, {
+      const updateData = {
         chat_history: newMessages
-      });
+      };
+
+      // Save AgentOS session ID if provided
+      if (agentSessId) {
+        updateData.agent_session_id = agentSessId;
+      }
+
+      await axios.put(`${API}/sessions/${sessionId}`, updateData);
     } catch (error) {
       console.error('Failed to save chat history:', error);
     }
@@ -135,55 +139,65 @@ const ChatPage = () => {
     };
   }, []);
 
-  // Play audio from base64
-  const playAudioFromBase64 = useCallback((base64Audio) => {
-    if (isMuted || !audioRef.current) return;
-    
-    const audioSrc = `data:audio/mpeg;base64,${base64Audio}`;
-    audioRef.current.src = audioSrc;
-    audioRef.current.onplay = () => setIsSpeaking(true);
-    audioRef.current.onended = () => setIsSpeaking(false);
-    audioRef.current.onerror = () => setIsSpeaking(false);
-    
-    audioRef.current.play().catch(e => {
-      console.log('Audio playback failed:', e);
-      setIsSpeaking(false);
-    });
-  }, [isMuted]);
 
-  // Send message to Mia
+  // Send message to Main Agent
   const sendMessage = useCallback(async (message, isIntro = false) => {
     if (!message.trim() || isChatting) return;
-    
+
     let updatedMessages = [...messages];
-    
+
     // Add user message to chat
     if (!isIntro) {
       updatedMessages = [...messages, { role: 'user', content: message }];
       setMessages(updatedMessages);
       setChatInput('');
     }
-    
+
     setIsChatting(true);
-    setCurrentResponse('');
-    
+
     try {
-      const response = await axios.post(`${API}/chat-voice`, {
-        message: message,
-        session_id: chatSessionId
-      }, { timeout: 30000 });
-      
-      // Add AI response
-      const newMessages = [...updatedMessages, { role: 'assistant', content: response.data.response }];
-      setMessages(newMessages);
-      setCurrentResponse(response.data.response);
-      
-      // Save to session
-      saveChatHistory(newMessages);
-      
-      if (response.data.audio) {
-        playAudioFromBase64(response.data.audio);
+      // Call Main Agent through AgentOS
+      const result = await sendMessageToAgent(message, agentSessionId);
+
+      if (!result.success) {
+        throw new Error(result.error);
       }
+
+      // Store AgentOS session ID for continuity
+      let newAgentSessionId = agentSessionId;
+      if (result.sessionId && !agentSessionId) {
+        newAgentSessionId = result.sessionId;
+        setAgentSessionId(result.sessionId);
+      }
+
+      let allNewMessages = [...updatedMessages];
+
+      // Add subagent responses if any (before main agent response)
+      if (result.memberResponses && result.memberResponses.length > 0) {
+        for (const memberResponse of result.memberResponses) {
+          allNewMessages.push({
+            role: 'assistant',
+            content: memberResponse.content,
+            agentName: memberResponse.agent_name || 'Agent',
+            agentId: memberResponse.agent_id,
+            isSubagent: true
+          });
+        }
+      }
+
+      // Add Main Agent response
+      allNewMessages.push({
+        role: 'assistant',
+        content: result.content,
+        agentName: 'Main Coach',
+        isSubagent: false
+      });
+
+      setMessages(allNewMessages);
+
+      // Save to backend session storage (include agent session ID if it was just set)
+      saveChatHistory(allNewMessages, !agentSessionId && newAgentSessionId ? newAgentSessionId : null);
+
     } catch (error) {
       console.error('Chat error:', error);
       if (!isIntro) {
@@ -192,7 +206,7 @@ const ChatPage = () => {
     } finally {
       setIsChatting(false);
     }
-  }, [isChatting, chatSessionId, messages, playAudioFromBase64, saveChatHistory]);
+  }, [isChatting, agentSessionId, messages, saveChatHistory]);
 
   // Trigger intro message when session loads (only for new sessions)
   useEffect(() => {
@@ -205,10 +219,10 @@ const ChatPage = () => {
     }
     
     introCalledRef.current = true;
-    
-    // New session - Mia asks about language preferences
-    const introMessage = `This is a new learning session. Greet the user warmly and ask them which language they would like to learn today. Keep it brief and friendly.`;
-    
+
+    // New session - Agent introduces itself
+    const introMessage = "Hello! I'm your language learning coach.";
+
     sendMessage(introMessage, true);
   }, [session, isLoadingSession, sendMessage]);
 
@@ -334,20 +348,13 @@ const ChatPage = () => {
           </div>
 
           {/* Response Display - Like Landing Page */}
-          <div className="text-center max-w-lg mx-auto mb-8 min-h-[80px]">
+          <div className="text-center max-w-2xl mx-auto mb-8 min-h-[80px] space-y-6">
             {isListening ? (
-              <p 
+              <p
                 className="text-lg leading-relaxed animate-pulse"
                 style={{ color: 'rgba(143, 236, 120, 0.8)' }}
               >
                 {chatInput || "Listening..."}
-              </p>
-            ) : currentResponse ? (
-              <p 
-                className="text-lg leading-relaxed"
-                style={{ color: 'rgba(255, 255, 255, 0.8)' }}
-              >
-                "{currentResponse}"
               </p>
             ) : isChatting ? (
               <div className="flex items-center justify-center gap-2">
@@ -355,9 +362,32 @@ const ChatPage = () => {
                 <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
+            ) : messages.length > 0 ? (
+              // Show last few messages with agent indicators
+              <>
+                {messages.slice(-3).filter(m => m.role === 'assistant').map((msg, idx) => (
+                  <div key={idx} className="space-y-2">
+                    {msg.isSubagent && (
+                      <div className="flex items-center justify-center gap-2 text-sm" style={{ color: 'rgba(143, 236, 120, 0.7)' }}>
+                        <div className="w-2 h-2 rounded-full bg-[#8FEC78]"></div>
+                        <span>{msg.agentName}</span>
+                      </div>
+                    )}
+                    <p
+                      className="text-lg leading-relaxed"
+                      style={{
+                        color: msg.isSubagent ? 'rgba(143, 236, 120, 0.9)' : 'rgba(255, 255, 255, 0.8)',
+                        fontStyle: msg.isSubagent ? 'italic' : 'normal'
+                      }}
+                    >
+                      "{msg.content}"
+                    </p>
+                  </div>
+                ))}
+              </>
             ) : (
               <p className="text-white/40">
-                Start a conversation with Mia
+                Start a conversation with your coach
               </p>
             )}
           </div>
@@ -436,8 +466,6 @@ const ChatPage = () => {
                       placeholder="Type your message..."
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
-                      onFocus={() => setInputFocused(true)}
-                      onBlur={() => setInputFocused(false)}
                       disabled={isChatting}
                       className="h-14 pl-5 pr-14 rounded-2xl text-white placeholder:text-white/25 transition-all duration-300 border-0 focus-visible:ring-1 focus-visible:ring-[#8FEC78]/50"
                       style={{
