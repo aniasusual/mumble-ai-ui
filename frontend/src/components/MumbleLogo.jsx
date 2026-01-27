@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Sound wave bars forming an "M" shape
 const MumbleLogo = ({ className = "", size = 40, color = "#ffffff", isAnimating = false }) => {
   // Bar heights form an M pattern: tall, short, tall (middle peak), short, tall
