@@ -2,7 +2,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
+const SidePanel = ({ isOpen, onClose, children, title, width = "420px" }) => {
   // Close on escape key
   React.useEffect(() => {
     const handleEscape = (e) => {
@@ -26,21 +26,25 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
 
   return (
     <>
-      {/* Backdrop - Minimal */}
+      {/* Backdrop - More Opaque */}
       <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
         style={{
           animation: "fadeIn 0.25s ease-out",
         }}
         onClick={onClose}
       />
 
-      {/* Side Panel - Floating with Curves */}
+      {/* Side Panel - Responsive & Opaque */}
       <div
-        className="fixed top-4 right-4 bottom-4 z-50 flex flex-col shadow-2xl rounded-2xl overflow-hidden"
+        className="fixed z-50 flex flex-col shadow-2xl rounded-2xl overflow-hidden"
         style={{
-          width: width,
-          background: "rgba(10, 10, 10, 0.95)",
+          top: "16px",
+          right: "16px",
+          bottom: "16px",
+          width: "calc(100% - 32px)",
+          maxWidth: width,
+          background: "rgba(18, 18, 18, 1)",
           backdropFilter: "blur(32px)",
           WebkitBackdropFilter: "blur(32px)",
           border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -49,7 +53,7 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
       >
         {/* Header - Minimal */}
         <div
-          className="flex items-center justify-between px-8 py-5 border-b"
+          className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
           style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
         >
           <h2 className="text-lg font-medium text-white">{title}</h2>
@@ -82,6 +86,18 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
           to {
             transform: translateX(0);
             opacity: 1;
+          }
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+          .fixed.z-50 {
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 0 !important;
           }
         }
       `}</style>
