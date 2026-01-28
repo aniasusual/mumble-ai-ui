@@ -437,232 +437,219 @@ const SessionsPage = () => {
           </div>
         </SidePanel>
 
-        {/* Settings Modal */}
-        <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
-          <DialogContent className="max-w-md border-0" style={{ overflow: 'visible !important' }}>
-            <div 
-              className="p-8 rounded-3xl"
-              style={{
-                background: 'rgba(10, 10, 10, 0.95)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
-                overflow: 'visible',
-              }}
-            >
-              <DialogHeader>
-                <DialogTitle className="text-xl font-semibold text-white mb-8">
-                  Settings
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-5">
-                {/* Base Language Setting */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-semibold text-white block mb-1.5">
-                      Base Language
-                    </label>
-                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
-                      Your native language for learning
-                    </p>
-                  </div>
-
-                  {/* Custom Language Dropdown */}
-                  <div className="relative z-50">
-                    <button
-                      disabled={isUpdatingLanguage}
-                      onClick={() => {
-                        setLanguageDropdownOpen(!languageDropdownOpen);
-                        setLanguageSearch('');
-                      }}
-                      className="w-full h-14 px-4 rounded-xl text-base font-medium transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: languageDropdownOpen 
-                          ? 'rgba(143, 236, 120, 0.08)' 
-                          : 'rgba(255, 255, 255, 0.06)',
-                        color: 'rgba(255, 255, 255, 0.95)',
-                        border: languageDropdownOpen 
-                          ? '2px solid rgba(143, 236, 120, 0.4)' 
-                          : '2px solid rgba(255, 255, 255, 0.12)',
-                        boxShadow: languageDropdownOpen 
-                          ? '0 0 0 3px rgba(143, 236, 120, 0.1)' 
-                          : 'none',
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">
-                          {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
-                        </span>
-                        <span className="font-semibold">
-                          {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.label || 'Select language...'}
-                        </span>
-                      </div>
-                      <ChevronsUpDown 
-                        className="w-5 h-5 transition-all duration-200" 
-                        style={{ 
-                          transform: languageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                          color: languageDropdownOpen ? '#8FEC78' : 'rgba(255, 255, 255, 0.5)',
-                        }}
-                      />
-                    </button>
-
-                    {/* Dropdown Panel */}
-                    {languageDropdownOpen && (
-                      <>
-                        {/* Backdrop */}
-                        <div 
-                          className="fixed inset-0 z-[100]"
-                          onClick={() => {
-                            setLanguageDropdownOpen(false);
-                            setLanguageSearch('');
-                          }}
-                          style={{ background: 'transparent' }}
-                        />
-                        
-                        {/* Dropdown Content */}
-                        <div 
-                          className="absolute top-full left-0 right-0 mt-3 rounded-2xl z-[101] language-dropdown-panel"
-                          style={{
-                            background: 'rgba(15, 15, 15, 0.98)',
-                            backdropFilter: 'blur(32px)',
-                            WebkitBackdropFilter: 'blur(32px)',
-                            border: '2px solid rgba(143, 236, 120, 0.2)',
-                            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(143, 236, 120, 0.1)',
-                          }}
-                        >
-                          {/* Search Input */}
-                          <div className="p-4 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                            <div className="relative">
-                              <Search 
-                                className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" 
-                                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
-                              />
-                              <input
-                                type="text"
-                                placeholder="Search languages..."
-                                value={languageSearch}
-                                onChange={(e) => setLanguageSearch(e.target.value)}
-                                className="w-full h-12 pl-12 pr-4 rounded-xl text-base outline-none transition-all"
-                                style={{
-                                  background: 'rgba(255, 255, 255, 0.08)',
-                                  color: 'rgba(255, 255, 255, 0.95)',
-                                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = 'rgba(143, 236, 120, 0.4)';
-                                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                                  e.target.style.background = 'rgba(255, 255, 255, 0.08)';
-                                }}
-                                autoFocus
-                              />
-                            </div>
-                          </div>
-
-                          {/* Language List - SCROLLABLE */}
-                          <div 
-                            className="overflow-y-auto overflow-x-hidden py-3"
-                            style={{
-                              maxHeight: '400px',
-                              overflowY: 'auto',
-                              WebkitOverflowScrolling: 'touch',
-                              scrollbarWidth: 'thin',
-                              scrollbarColor: 'rgba(143, 236, 120, 0.3) rgba(255, 255, 255, 0.05)',
-                            }}
-                          >
-                            {filteredLanguages.length === 0 ? (
-                              <div className="py-12 text-center">
-                                <p className="text-base mb-1" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                                  No language found
-                                </p>
-                                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-                                  Try a different search term
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="px-2 space-y-1">
-                                {filteredLanguages.map((lang) => {
-                                  const isSelected = baseLanguage === lang.value;
-                                  return (
-                                    <button
-                                      key={lang.value}
-                                      onClick={() => handleBaseLanguageChange(lang.value)}
-                                      className="w-full flex items-center gap-4 px-4 py-4 text-left transition-all rounded-xl group"
-                                      style={{
-                                        background: isSelected 
-                                          ? 'rgba(143, 236, 120, 0.12)' 
-                                          : 'transparent',
-                                        color: isSelected ? '#8FEC78' : 'rgba(255, 255, 255, 0.8)',
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        if (!isSelected) {
-                                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                                          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
-                                        }
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        if (!isSelected) {
-                                          e.currentTarget.style.background = 'transparent';
-                                          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
-                                        }
-                                      }}
-                                    >
-                                      <div 
-                                        className="w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md transition-all"
-                                        style={{
-                                          background: isSelected 
-                                            ? 'rgba(143, 236, 120, 0.2)' 
-                                            : 'transparent',
-                                        }}
-                                      >
-                                        <Check
-                                          className="w-4 h-4"
-                                          style={{
-                                            opacity: isSelected ? 1 : 0,
-                                            color: '#8FEC78',
-                                          }}
-                                        />
-                                      </div>
-                                      <span className="text-3xl flex-shrink-0">{lang.flag}</span>
-                                      <span className="font-semibold text-lg flex-1">{lang.label}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
+        {/* Settings Side Panel */}
+        <SidePanel
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          title="Settings"
+          width="500px"
+        >
+          <div className="p-8">
+            <div className="space-y-6">
+              {/* Base Language Setting */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold text-white block mb-1.5">
+                    Base Language
+                  </label>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
+                    Your native language for learning
+                  </p>
                 </div>
 
-                <button
-                  onClick={handleLogout}
-                  className="w-full h-12 rounded-xl text-sm font-medium transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2.5"
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.12)',
-                    color: '#EF4444',
-                    border: '1px solid rgba(239, 68, 68, 0.25)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
-                  }}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Log out
-                </button>
+                {/* Custom Language Dropdown */}
+                <div className="relative z-50">
+                  <button
+                    disabled={isUpdatingLanguage}
+                    onClick={() => {
+                      setLanguageDropdownOpen(!languageDropdownOpen);
+                      setLanguageSearch('');
+                    }}
+                    className="w-full h-14 px-4 rounded-xl text-base font-medium transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: languageDropdownOpen 
+                        ? 'rgba(143, 236, 120, 0.08)' 
+                        : 'rgba(255, 255, 255, 0.06)',
+                      color: 'rgba(255, 255, 255, 0.95)',
+                      border: languageDropdownOpen 
+                        ? '2px solid rgba(143, 236, 120, 0.4)' 
+                        : '2px solid rgba(255, 255, 255, 0.12)',
+                      boxShadow: languageDropdownOpen 
+                        ? '0 0 0 3px rgba(143, 236, 120, 0.1)' 
+                        : 'none',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">
+                        {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
+                      </span>
+                      <span className="font-semibold">
+                        {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.label || 'Select language...'}
+                      </span>
+                    </div>
+                    <ChevronsUpDown 
+                      className="w-5 h-5 transition-all duration-200" 
+                      style={{ 
+                        transform: languageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: languageDropdownOpen ? '#8FEC78' : 'rgba(255, 255, 255, 0.5)',
+                      }}
+                    />
+                  </button>
+
+                  {/* Dropdown Panel */}
+                  {languageDropdownOpen && (
+                    <>
+                      {/* Backdrop */}
+                      <div 
+                        className="fixed inset-0 z-[100]"
+                        onClick={() => {
+                          setLanguageDropdownOpen(false);
+                          setLanguageSearch('');
+                        }}
+                        style={{ background: 'transparent' }}
+                      />
+                      
+                      {/* Dropdown Content */}
+                      <div 
+                        className="absolute top-full left-0 right-0 mt-3 rounded-2xl z-[101] language-dropdown-panel"
+                        style={{
+                          background: 'rgba(15, 15, 15, 0.98)',
+                          backdropFilter: 'blur(32px)',
+                          WebkitBackdropFilter: 'blur(32px)',
+                          border: '2px solid rgba(143, 236, 120, 0.2)',
+                          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(143, 236, 120, 0.1)',
+                        }}
+                      >
+                        {/* Search Input */}
+                        <div className="p-4 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                          <div className="relative">
+                            <Search 
+                              className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" 
+                              style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Search languages..."
+                              value={languageSearch}
+                              onChange={(e) => setLanguageSearch(e.target.value)}
+                              className="w-full h-12 pl-12 pr-4 rounded-xl text-base outline-none transition-all"
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                color: 'rgba(255, 255, 255, 0.95)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                              }}
+                              onFocus={(e) => {
+                                e.target.style.borderColor = 'rgba(143, 236, 120, 0.4)';
+                                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                              }}
+                              onBlur={(e) => {
+                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                                e.target.style.background = 'rgba(255, 255, 255, 0.08)';
+                              }}
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+
+                        {/* Language List - SCROLLABLE */}
+                        <div 
+                          className="overflow-y-auto overflow-x-hidden py-3"
+                          style={{
+                            maxHeight: '400px',
+                            overflowY: 'auto',
+                            WebkitOverflowScrolling: 'touch',
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(143, 236, 120, 0.3) rgba(255, 255, 255, 0.05)',
+                          }}
+                        >
+                          {filteredLanguages.length === 0 ? (
+                            <div className="py-12 text-center">
+                              <p className="text-base mb-1" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                No language found
+                              </p>
+                              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
+                                Try a different search term
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="px-2 space-y-1">
+                              {filteredLanguages.map((lang) => {
+                                const isSelected = baseLanguage === lang.value;
+                                return (
+                                  <button
+                                    key={lang.value}
+                                    onClick={() => handleBaseLanguageChange(lang.value)}
+                                    className="w-full flex items-center gap-4 px-4 py-4 text-left transition-all rounded-xl group"
+                                    style={{
+                                      background: isSelected 
+                                        ? 'rgba(143, 236, 120, 0.12)' 
+                                        : 'transparent',
+                                      color: isSelected ? '#8FEC78' : 'rgba(255, 255, 255, 0.8)',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!isSelected) {
+                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!isSelected) {
+                                        e.currentTarget.style.background = 'transparent';
+                                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                                      }
+                                    }}
+                                  >
+                                    <div 
+                                      className="w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md transition-all"
+                                      style={{
+                                        background: isSelected 
+                                          ? 'rgba(143, 236, 120, 0.2)' 
+                                          : 'transparent',
+                                      }}
+                                    >
+                                      <Check
+                                        className="w-4 h-4"
+                                        style={{
+                                          opacity: isSelected ? 1 : 0,
+                                          color: '#8FEC78',
+                                        }}
+                                      />
+                                    </div>
+                                    <span className="text-3xl flex-shrink-0">{lang.flag}</span>
+                                    <span className="font-semibold text-lg flex-1">{lang.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
+
+              <button
+                onClick={handleLogout}
+                className="w-full h-12 rounded-xl text-sm font-medium transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2.5"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  color: '#EF4444',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+                }}
+              >
+                <LogOut className="w-4 h-4" />
+                Log out
+              </button>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </SidePanel>
       </div>
     </MeshGradientBackground>
   );
