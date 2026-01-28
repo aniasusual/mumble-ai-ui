@@ -481,15 +481,15 @@ const SessionsPage = () => {
                         style={{ background: 'transparent' }}
                       />
                       
-                      {/* Dropdown Content - Opaque Glass */}
+                      {/* Dropdown Content - Transparent Glass */}
                       <div 
                         className="absolute top-full left-0 right-0 mt-2 rounded-lg z-[101] language-dropdown-panel"
                         style={{
-                          background: 'rgba(20, 20, 20, 0.92)',
-                          backdropFilter: 'blur(40px) saturate(180%)',
-                          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                          background: 'rgba(15, 15, 15, 0.75)',
+                          backdropFilter: 'blur(50px) saturate(180%)',
+                          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
                         }}
                       >
                         {/* Search Input - Minimal */}
