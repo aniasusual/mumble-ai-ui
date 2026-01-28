@@ -17,6 +17,19 @@ import {
   DialogTitle,
 } from '../components/ui/dialog';
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '../components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '../components/ui/popover';
+import {
   Plus,
   User,
   Settings,
@@ -26,6 +39,8 @@ import {
   Trash2,
   Loader2,
   ChevronRight,
+  Check,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -41,15 +56,31 @@ const LANGUAGES = [
   { value: 'mandarin', label: 'Mandarin', flag: '🇨🇳' },
 ];
 
+const BASE_LANGUAGES = [
+  { value: 'English', label: 'English', flag: '🇬🇧' },
+  { value: 'Spanish', label: 'Spanish', flag: '🇪🇸' },
+  { value: 'French', label: 'French', flag: '🇫🇷' },
+  { value: 'German', label: 'German', flag: '🇩🇪' },
+  { value: 'Japanese', label: 'Japanese', flag: '🇯🇵' },
+  { value: 'Mandarin', label: 'Mandarin', flag: '🇨🇳' },
+  { value: 'Hindi', label: 'Hindi', flag: '🇮🇳' },
+  { value: 'Portuguese', label: 'Portuguese', flag: '🇵🇹' },
+  { value: 'Italian', label: 'Italian', flag: '🇮🇹' },
+  { value: 'Korean', label: 'Korean', flag: '🇰🇷' },
+];
+
 const SessionsPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  
+  const { user, logout, updateUser } = useAuth();
+
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [baseLanguage, setBaseLanguage] = useState(user?.base_language || 'English');
+  const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+  const [languagePopoverOpen, setLanguagePopoverOpen] = useState(false);
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
@@ -105,6 +136,30 @@ const SessionsPage = () => {
     navigate('/');
     toast.success('Logged out successfully');
   };
+
+  // Handle base language update
+  const handleBaseLanguageChange = async (language) => {
+    if (isUpdatingLanguage || language === baseLanguage) return;
+
+    setIsUpdatingLanguage(true);
+    try {
+      await updateUser({ base_language: language });
+      setBaseLanguage(language);
+      toast.success('Base language updated');
+    } catch (error) {
+      toast.error('Failed to update language');
+      console.error('Language update error:', error);
+    } finally {
+      setIsUpdatingLanguage(false);
+    }
+  };
+
+  // Update base language when user changes
+  useEffect(() => {
+    if (user?.base_language) {
+      setBaseLanguage(user.base_language);
+    }
+  }, [user]);
 
   // Get language info
   const getLanguageInfo = (languageValue) => {
@@ -448,20 +503,109 @@ const SessionsPage = () => {
                   Settings
                 </DialogTitle>
               </DialogHeader>
-              
+
               <div className="space-y-4">
-                <div 
+                {/* Base Language Setting */}
+                <div
                   className="p-5 rounded-xl"
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                  }}
+                  // style={{
+                  //   background: 'rgba(255, 255, 255, 0.04)',
+                  //   border: '1px solid rgba(255, 255, 255, 0.05)',
+                  // }}
                 >
-                  <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
-                    More settings coming soon
-                  </p>
+                  <div className="mb-3">
+                    <label className="text-sm font-medium text-white block mb-1">
+                      Base Language
+                    </label>
+                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                      Your native language for learning
+                    </p>
+                  </div>
+
+                  <Popover open={languagePopoverOpen} onOpenChange={setLanguagePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        disabled={isUpdatingLanguage}
+                        className="w-full h-12 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-between"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">
+                            {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
+                          </span>
+                          <span>
+                            {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.label || 'Select language...'}
+                          </span>
+                        </div>
+                        <ChevronsUpDown className="w-4 h-4 opacity-50" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[--radix-popover-trigger-width] p-0 border-0"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    >
+                      <Command
+                        className="rounded-xl"
+                        style={{
+                          background: 'transparent',
+                          overflow: 'visible',
+                        }}
+                      >
+                        <CommandInput
+                          placeholder="Search language..."
+                          className="h-9 text-sm border-b"
+                          style={{
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                          }}
+                        />
+                        <CommandList
+                          className="max-h-[300px] overflow-y-auto overflow-x-hidden"
+                          style={{
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent',
+                          }}
+                        >
+                          <CommandEmpty className="py-6 text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                            No language found.
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {BASE_LANGUAGES.map((lang) => (
+                              <CommandItem
+                                key={lang.value}
+                                value={lang.label}
+                                onSelect={() => {
+                                  handleBaseLanguageChange(lang.value);
+                                  setLanguagePopoverOpen(false);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+                                style={{
+                                  color: baseLanguage === lang.value ? '#8FEC78' : 'rgba(255, 255, 255, 0.7)',
+                                }}
+                              >
+                                <Check
+                                  className={`w-4 h-4 ${baseLanguage === lang.value ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                                <span className="text-base">{lang.flag}</span>
+                                <span>{lang.label}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                
+
                 <button
                   onClick={handleLogout}
                   className="w-full h-12 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"

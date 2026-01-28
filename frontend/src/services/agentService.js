@@ -7,9 +7,10 @@ const AGENT_ID = 'mumble-ai-coach';
  * Send message to Main Agent (orchestrator)
  * @param {string} message - User message
  * @param {string} sessionId - Optional AgentOS session ID for continuity
+ * @param {object} user - User object with base_language
  * @returns {Promise} Response from agent
  */
-export const sendMessageToAgent = async (message, sessionId = null) => {
+export const sendMessageToAgent = async (message, sessionId = null, user = null) => {
   try {
     const formData = new FormData();
     formData.append('message', message);
@@ -20,6 +21,14 @@ export const sendMessageToAgent = async (message, sessionId = null) => {
 
     if (sessionId) {
       formData.append('session_id', sessionId);
+    }
+
+    // Pass base_language as dependency for agent runtime injection
+    if (user?.base_language) {
+      formData.append('dependencies', JSON.stringify({
+        base_language: user.base_language
+      }));
+      console.log("Passing base_language dependency:", user.base_language);
     }
 
     const response = await axios.post(
@@ -144,9 +153,10 @@ export const listAgentSessions = async () => {
  * @param {string} message - User message
  * @param {string} sessionId - Optional AgentOS session ID
  * @param {Function} onChunk - Callback for each stream chunk
+ * @param {object} user - User object with base_language
  * @returns {Promise} Final response
  */
-export const sendMessageToAgentStreaming = async (message, sessionId, onChunk) => {
+export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, user = null) => {
   try {
     const formData = new FormData();
     formData.append('message', message);
@@ -154,6 +164,14 @@ export const sendMessageToAgentStreaming = async (message, sessionId, onChunk) =
     formData.append('monitor', 'true');
     if (sessionId) {
       formData.append('session_id', sessionId);
+    }
+
+    // Pass base_language as dependency for agent runtime injection
+    if (user?.base_language) {
+      formData.append('dependencies', JSON.stringify({
+        base_language: user.base_language
+      }));
+      console.log("Passing base_language dependency (streaming):", user.base_language);
     }
 
     const response = await fetch(`${BACKEND_URL}/teams/${AGENT_ID}/runs`, {
