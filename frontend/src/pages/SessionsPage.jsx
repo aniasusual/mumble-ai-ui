@@ -503,84 +503,118 @@ const SessionsPage = () => {
                     </p>
                   </div>
 
-                  <Popover open={languagePopoverOpen} onOpenChange={setLanguagePopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        disabled={isUpdatingLanguage}
-                        className="w-full h-12 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-between hover:bg-white/5"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.06)',
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
-                        }}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-lg">
-                            {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
-                          </span>
-                          <span>
-                            {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.label || 'Select language...'}
-                          </span>
-                        </div>
-                        <ChevronsUpDown className="w-4 h-4 opacity-50" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[--radix-popover-trigger-width] p-0 border-0"
+                  {/* Custom Language Dropdown */}
+                  <div className="relative">
+                    <button
+                      disabled={isUpdatingLanguage}
+                      onClick={() => {
+                        setLanguageDropdownOpen(!languageDropdownOpen);
+                        setLanguageSearch('');
+                      }}
+                      className="w-full h-12 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-between hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
-                        background: 'rgba(10, 10, 10, 0.98)',
-                        backdropFilter: 'blur(24px)',
-                        WebkitBackdropFilter: 'blur(24px)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6)',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        border: languageDropdownOpen 
+                          ? '1px solid rgba(143, 236, 120, 0.3)' 
+                          : '1px solid rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      <Command
-                        className="rounded-xl"
-                        style={{
-                          background: 'transparent',
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">
+                          {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
+                        </span>
+                        <span>
+                          {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.label || 'Select language...'}
+                        </span>
+                      </div>
+                      <ChevronsUpDown 
+                        className="w-4 h-4 opacity-50 transition-transform" 
+                        style={{ 
+                          transform: languageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' 
                         }}
-                      >
-                        <CommandInput
-                          placeholder="Search language..."
-                          className="h-10 text-sm border-b"
-                          style={{
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            borderColor: 'rgba(255, 255, 255, 0.12)',
+                      />
+                    </button>
+
+                    {/* Dropdown Panel */}
+                    {languageDropdownOpen && (
+                      <>
+                        {/* Backdrop to close dropdown */}
+                        <div 
+                          className="fixed inset-0 z-40"
+                          onClick={() => {
+                            setLanguageDropdownOpen(false);
+                            setLanguageSearch('');
                           }}
                         />
-                        <CommandList
-                          className="max-h-[280px] overflow-y-auto overflow-x-hidden py-2"
+                        
+                        {/* Dropdown Content */}
+                        <div 
+                          className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50 shadow-2xl"
+                          style={{
+                            background: 'rgba(10, 10, 10, 0.98)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
+                          }}
                         >
-                          <CommandEmpty className="py-8 text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
-                            No language found.
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {BASE_LANGUAGES.map((lang) => (
-                              <CommandItem
-                                key={lang.value}
-                                value={lang.label}
-                                onSelect={() => {
-                                  handleBaseLanguageChange(lang.value);
-                                  setLanguagePopoverOpen(false);
-                                }}
-                                className="flex items-center gap-3 px-3 py-2.5 cursor-pointer mx-1 rounded-lg"
-                                style={{
-                                  color: baseLanguage === lang.value ? '#8FEC78' : 'rgba(255, 255, 255, 0.75)',
-                                }}
-                              >
-                                <Check
-                                  className={`w-4 h-4 flex-shrink-0 ${baseLanguage === lang.value ? 'opacity-100' : 'opacity-0'}`}
-                                />
-                                <span className="text-lg flex-shrink-0">{lang.flag}</span>
-                                <span className="font-medium">{lang.label}</span>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                          {/* Search Input */}
+                          <div className="p-3 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+                            <input
+                              type="text"
+                              placeholder="Search languages..."
+                              value={languageSearch}
+                              onChange={(e) => setLanguageSearch(e.target.value)}
+                              className="w-full h-10 px-3 rounded-lg text-sm outline-none transition-all"
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.06)',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                              }}
+                              autoFocus
+                            />
+                          </div>
+
+                          {/* Language List */}
+                          <div 
+                            className="max-h-[280px] overflow-y-auto py-2"
+                            style={{
+                              scrollbarWidth: 'thin',
+                              scrollbarColor: 'rgba(255, 255, 255, 0.25) transparent',
+                            }}
+                          >
+                            {filteredLanguages.length === 0 ? (
+                              <div className="py-8 text-center text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                                No language found
+                              </div>
+                            ) : (
+                              filteredLanguages.map((lang) => (
+                                <button
+                                  key={lang.value}
+                                  onClick={() => handleBaseLanguageChange(lang.value)}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5 rounded-lg mx-2"
+                                  style={{
+                                    color: baseLanguage === lang.value ? '#8FEC78' : 'rgba(255, 255, 255, 0.75)',
+                                    width: 'calc(100% - 16px)',
+                                  }}
+                                >
+                                  <Check
+                                    className="w-4 h-4 flex-shrink-0"
+                                    style={{
+                                      opacity: baseLanguage === lang.value ? 1 : 0,
+                                    }}
+                                  />
+                                  <span className="text-xl flex-shrink-0">{lang.flag}</span>
+                                  <span className="font-medium">{lang.label}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <button
