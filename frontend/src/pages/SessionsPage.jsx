@@ -492,11 +492,11 @@ const SessionsPage = () => {
                         style={{ background: 'transparent' }}
                       />
                       
-                      {/* Dropdown Content - Minimal */}
+                      {/* Dropdown Content - Matching Style */}
                       <div 
                         className="absolute top-full left-0 right-0 mt-2 rounded-lg z-[101] language-dropdown-panel"
                         style={{
-                          background: 'rgba(10, 10, 10, 0.98)',
+                          background: 'rgba(10, 10, 10, 0.95)',
                           backdropFilter: 'blur(32px)',
                           WebkitBackdropFilter: 'blur(32px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
