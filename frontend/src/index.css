@@ -3,24 +3,32 @@
 @tailwind utilities;
 
 :root {
-  /* Dark Theme - Minimalistic Black */
+  /* Dark Theme - Enhanced Minimalistic Black */
   --bg-page: #000000;
   --bg-card: #0a0a0a;
-  --bg-section: rgba(255, 255, 255, 0.02);
+  --bg-section: rgba(255, 255, 255, 0.03);
   
-  /* Text - Clean Hierarchy */
+  /* Text - Enhanced Hierarchy */
   --text-primary: #ffffff;
-  --text-body: rgba(255, 255, 255, 0.9);
-  --text-secondary: rgba(255, 255, 255, 0.5);
-  --text-muted: rgba(255, 255, 255, 0.3);
+  --text-body: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.35);
   
-  /* Borders */
-  --border-light: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
+  /* Borders - More refined */
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.18);
+  --border-focus: rgba(143, 236, 120, 0.4);
   
-  /* Accent - Subtle green glow */
+  /* Accent - Enhanced green with better variations */
   --accent-primary: #8FEC78;
-  --accent-glow: rgba(143, 236, 120, 0.15);
+  --accent-hover: #a5f08f;
+  --accent-glow: rgba(143, 236, 120, 0.2);
+  --accent-glow-strong: rgba(143, 236, 120, 0.3);
+  
+  /* Glass effects */
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-hover: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.12);
   
   /* Orb colors */
   --orb-green: #8FEC78;
@@ -46,7 +54,7 @@
   --border: 0 0% 15%;
   --input: 0 0% 15%;
   --ring: 0 0% 100%;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 * {
