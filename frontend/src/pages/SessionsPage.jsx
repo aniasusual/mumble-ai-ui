@@ -475,15 +475,9 @@ const SessionsPage = () => {
 
               <div className="space-y-5">
                 {/* Base Language Setting */}
-                <div
-                  className="p-5 rounded-xl"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                  }}
-                >
-                  <div className="mb-4">
-                    <label className="text-sm font-medium text-white block mb-1.5">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-white block mb-1.5">
                       Base Language
                     </label>
                     <p className="text-xs leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
@@ -499,29 +493,36 @@ const SessionsPage = () => {
                         setLanguageDropdownOpen(!languageDropdownOpen);
                         setLanguageSearch('');
                       }}
-                      className="w-full h-12 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-between hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-14 px-4 rounded-xl text-base font-medium transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        color: 'rgba(255, 255, 255, 0.9)',
+                        background: languageDropdownOpen 
+                          ? 'rgba(143, 236, 120, 0.08)' 
+                          : 'rgba(255, 255, 255, 0.06)',
+                        color: 'rgba(255, 255, 255, 0.95)',
                         border: languageDropdownOpen 
-                          ? '1px solid rgba(143, 236, 120, 0.3)' 
-                          : '1px solid rgba(255, 255, 255, 0.12)',
+                          ? '2px solid rgba(143, 236, 120, 0.4)' 
+                          : '2px solid rgba(255, 255, 255, 0.12)',
+                        boxShadow: languageDropdownOpen 
+                          ? '0 0 0 3px rgba(143, 236, 120, 0.1)' 
+                          : 'none',
                       }}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">
                           {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
                         </span>
-                        <span>
+                        <span className="font-semibold">
                           {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.label || 'Select language...'}
                         </span>
                       </div>
                       <ChevronsUpDown 
-                        className="w-4 h-4 opacity-50 transition-transform" 
+                        className="w-5 h-5 transition-all duration-200" 
                         style={{ 
-                          transform: languageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' 
+                          transform: languageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                          color: languageDropdownOpen ? '#8FEC78' : 'rgba(255, 255, 255, 0.5)',
                         }}
                       />
+                    </button>
                     </button>
 
                     {/* Dropdown Panel */}
