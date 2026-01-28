@@ -402,10 +402,11 @@ const SessionsPage = () => {
             <div 
               className="p-8 rounded-3xl"
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(10, 10, 10, 0.95)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
               }}
             >
               <DialogHeader>
@@ -414,44 +415,45 @@ const SessionsPage = () => {
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-5 mb-8 p-5 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                 <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-medium"
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-semibold"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.12)',
-                    color: 'rgba(255, 255, 255, 0.9)',
+                    background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15), rgba(90, 201, 75, 0.15))',
+                    color: '#8FEC78',
+                    border: '2px solid rgba(143, 236, 120, 0.3)',
                   }}
                 >
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <div>
-                  <h3 className="text-white font-medium text-lg">{user?.name}</h3>
-                  <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{user?.email}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold text-lg truncate">{user?.name}</h3>
+                  <p className="text-sm truncate" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{user?.email}</p>
                 </div>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Name</label>
+                  <label className="text-xs font-medium mb-2.5 block" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Name</label>
                   <Input
                     value={user?.name || ''}
                     disabled
                     className="h-12 rounded-xl text-sm border-0"
                     style={{ 
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      color: 'rgba(255, 255, 255, 0.6)',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      color: 'rgba(255, 255, 255, 0.7)',
                     }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Email</label>
+                  <label className="text-xs font-medium mb-2.5 block" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Email</label>
                   <Input
                     value={user?.email || ''}
                     disabled
                     className="h-12 rounded-xl text-sm border-0"
                     style={{ 
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      color: 'rgba(255, 255, 255, 0.6)',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      color: 'rgba(255, 255, 255, 0.7)',
                     }}
                   />
                 </div>
