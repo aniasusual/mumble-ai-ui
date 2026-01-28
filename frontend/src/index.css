@@ -395,17 +395,37 @@ html {
 @keyframes dropdownSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-10px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .language-dropdown-panel {
-  animation: dropdownSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: dropdownSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Custom scrollbar for language dropdown */
+.language-dropdown-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.language-dropdown-panel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.language-dropdown-panel::-webkit-scrollbar-thumb {
+  background: rgba(143, 236, 120, 0.3);
+  border-radius: 4px;
+}
+
+.language-dropdown-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(143, 236, 120, 0.5);
+}
+
 
 
 
