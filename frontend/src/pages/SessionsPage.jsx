@@ -390,48 +390,36 @@ const SessionsPage = () => {
           title="Profile"
           width="500px"
         >
-          <div className="p-8 space-y-6">
-            <div className="flex items-center gap-5 p-5 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+          <div className="p-8 space-y-8">
+            {/* User Info - Minimal */}
+            <div className="flex items-center gap-4">
               <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-semibold"
+                className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-medium"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.15), rgba(90, 201, 75, 0.15))',
+                  background: 'rgba(143, 236, 120, 0.1)',
                   color: '#8FEC78',
-                  border: '2px solid rgba(143, 236, 120, 0.3)',
                 }}
               >
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-white font-semibold text-lg truncate">{user?.name}</h3>
-                <p className="text-sm truncate" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{user?.email}</p>
+                <h3 className="text-white font-medium text-base truncate">{user?.name}</h3>
+                <p className="text-sm truncate" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{user?.email}</p>
               </div>
             </div>
             
-            <div className="space-y-4">
+            {/* Divider */}
+            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)' }} />
+            
+            {/* Info Fields - Minimal */}
+            <div className="space-y-5">
               <div>
-                <label className="text-xs font-medium mb-2.5 block" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Name</label>
-                <Input
-                  value={user?.name || ''}
-                  disabled
-                  className="h-12 rounded-xl text-sm border-0"
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  }}
-                />
+                <label className="text-xs font-medium mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Name</label>
+                <div className="text-white text-sm py-2.5">{user?.name || '-'}</div>
               </div>
               <div>
-                <label className="text-xs font-medium mb-2.5 block" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Email</label>
-                <Input
-                  value={user?.email || ''}
-                  disabled
-                  className="h-12 rounded-xl text-sm border-0"
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  }}
-                />
+                <label className="text-xs font-medium mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Email</label>
+                <div className="text-white text-sm py-2.5">{user?.email || '-'}</div>
               </div>
             </div>
           </div>
