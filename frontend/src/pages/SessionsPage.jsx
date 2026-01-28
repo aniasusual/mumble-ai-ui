@@ -456,18 +456,16 @@ const SessionsPage = () => {
 
         {/* Settings Modal */}
         <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
-          <DialogContent
-            className="sm:max-w-md border-0 p-0 overflow-hidden"
-            style={{ background: 'transparent' }}
-          >
+          <DialogContent className="max-w-md border-0" style={{ overflow: 'visible !important' }}>
             <div 
-              className="p-8 rounded-3xl overflow-visible"
+              className="p-8 rounded-3xl"
               style={{
                 background: 'rgba(10, 10, 10, 0.95)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
                 boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
+                overflow: 'visible',
               }}
             >
               <DialogHeader>
