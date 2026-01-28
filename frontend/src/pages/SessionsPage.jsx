@@ -71,6 +71,8 @@ const SessionsPage = () => {
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [languageSearch, setLanguageSearch] = useState('');
+  const languageButtonRef = React.useRef(null);
+  const [buttonPosition, setButtonPosition] = React.useState({ top: 0, left: 0, width: 0 });
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
