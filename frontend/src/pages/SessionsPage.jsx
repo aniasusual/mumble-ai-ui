@@ -4,18 +4,13 @@ import MeshGradientBackground from '../components/MeshGradientBackground';
 import MumbleLogo from '../components/MumbleLogo';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/ui/input';
+import SidePanel from '../components/ui/side-panel';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
 import {
   Plus,
   User,
