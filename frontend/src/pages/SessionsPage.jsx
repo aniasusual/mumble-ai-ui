@@ -538,7 +538,7 @@ const SessionsPage = () => {
                         
                         {/* Dropdown Content */}
                         <div 
-                          className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50 shadow-2xl"
+                          className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50 shadow-2xl language-dropdown-panel"
                           style={{
                             background: 'rgba(10, 10, 10, 0.98)',
                             backdropFilter: 'blur(24px)',
