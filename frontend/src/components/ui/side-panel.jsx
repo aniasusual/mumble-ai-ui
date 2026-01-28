@@ -26,37 +26,37 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - Minimal */}
       <div
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
         style={{
-          animation: "fadeIn 0.3s ease-out",
+          animation: "fadeIn 0.25s ease-out",
         }}
         onClick={onClose}
       />
 
-      {/* Side Panel */}
+      {/* Side Panel - Minimal */}
       <div
         className="fixed top-0 right-0 bottom-0 z-50 flex flex-col shadow-2xl"
         style={{
           width: width,
-          background: "rgba(10, 10, 10, 0.98)",
+          background: "rgba(0, 0, 0, 0.98)",
           backdropFilter: "blur(32px)",
           WebkitBackdropFilter: "blur(32px)",
-          borderLeft: "1px solid rgba(255, 255, 255, 0.12)",
+          borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
           animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
-        {/* Header */}
+        {/* Header - Minimal */}
         <div
-          className="flex items-center justify-between px-8 py-6 border-b"
-          style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}
+          className="flex items-center justify-between px-8 py-5 border-b"
+          style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
         >
-          <h2 className="text-2xl font-semibold text-white">{title}</h2>
+          <h2 className="text-lg font-medium text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
-            style={{ color: "rgba(255, 255, 255, 0.6)" }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-white/5"
+            style={{ color: "rgba(255, 255, 255, 0.5)" }}
           >
             <X className="w-5 h-5" />
           </button>
