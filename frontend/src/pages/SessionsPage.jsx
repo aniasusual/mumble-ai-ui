@@ -549,19 +549,25 @@ const SessionsPage = () => {
                         >
                           {/* Search Input */}
                           <div className="p-3 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-                            <input
-                              type="text"
-                              placeholder="Search languages..."
-                              value={languageSearch}
-                              onChange={(e) => setLanguageSearch(e.target.value)}
-                              className="w-full h-10 px-3 rounded-lg text-sm outline-none transition-all"
-                              style={{
-                                background: 'rgba(255, 255, 255, 0.06)',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                              }}
-                              autoFocus
-                            />
+                            <div className="relative">
+                              <Search 
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" 
+                                style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="Search languages..."
+                                value={languageSearch}
+                                onChange={(e) => setLanguageSearch(e.target.value)}
+                                className="w-full h-10 pl-10 pr-3 rounded-lg text-sm outline-none transition-all"
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.06)',
+                                  color: 'rgba(255, 255, 255, 0.9)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                }}
+                                autoFocus
+                              />
+                            </div>
                           </div>
 
                           {/* Language List */}
