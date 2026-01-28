@@ -458,7 +458,7 @@ const SessionsPage = () => {
             style={{ background: 'transparent' }}
           >
             <div 
-              className="p-8 rounded-3xl"
+              className="p-8 rounded-3xl overflow-visible"
               style={{
                 background: 'rgba(10, 10, 10, 0.95)',
                 backdropFilter: 'blur(24px)',
