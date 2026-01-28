@@ -319,10 +319,12 @@ const SessionsPage = () => {
                   return (
                     <div
                       key={session.id}
-                      onClick={() => navigate(`/sessions/${session.id}/chat`)}
                       className="group flex items-center justify-between py-4 px-4 -mx-4 rounded-xl cursor-pointer transition-all hover:bg-white/5"
                     >
-                      <div className="min-w-0">
+                      <div 
+                        className="min-w-0 flex-1"
+                        onClick={() => navigate(`/sessions/${session.id}/chat`)}
+                      >
                         {/* Session Info */}
                         <h3 className="text-white font-medium truncate">
                           {session.title || 'New Session'}
@@ -333,47 +335,31 @@ const SessionsPage = () => {
                         </p>
                       </div>
                       
-                      {/* Right Side */}
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-white/25 text-sm hidden sm:block">
+                      {/* Right Side - Hover Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-white/25 text-sm hidden sm:block group-hover:hidden">
                           {formatDate(session.created_at)}
                         </span>
                         
-                        {/* More Options */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button 
-                              onClick={(e) => e.stopPropagation()}
-                              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
-                            >
-                              <MoreHorizontal className="w-4 h-4 text-white/40" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="rounded-xl border-0 p-1.5"
-                            style={{
-                              background: 'rgba(10, 10, 10, 0.95)',
-                              backdropFilter: 'blur(24px)',
-                              WebkitBackdropFilter: 'blur(24px)',
-                              border: '1px solid rgba(255, 255, 255, 0.12)',
-                              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
-                            }}
-                          >
-                            <DropdownMenuItem
-                              onClick={(e) => handleDeleteSession(session.id, e)}
-                              className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
-                              style={{ 
-                                color: 'rgba(239, 68, 68, 0.85)',
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2.5" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/* Delete Button - Shows on Hover */}
+                        <button
+                          onClick={(e) => handleDeleteSession(session.id, e)}
+                          className="hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all hover:bg-red-500/10"
+                          style={{ 
+                            color: 'rgba(239, 68, 68, 0.85)',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Delete</span>
+                        </button>
                         
-                        <ChevronRight className="w-4 h-4 text-white/20" />
+                        <div 
+                          onClick={() => navigate(`/sessions/${session.id}/chat`)}
+                          className="flex items-center justify-center w-8 h-8 rounded-lg group-hover:bg-white/5 transition-all"
+                        >
+                          <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40" />
+                        </div>
                       </div>
                     </div>
                   );
