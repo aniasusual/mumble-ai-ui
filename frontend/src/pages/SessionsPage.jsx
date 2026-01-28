@@ -335,25 +335,28 @@ const SessionsPage = () => {
                         </p>
                       </div>
                       
-                      {/* Right Side - Hover Actions */}
+                      {/* Right Side - Responsive Actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="text-white/25 text-sm hidden sm:block group-hover:hidden">
+                        {/* Date - Hides on mobile and on desktop hover */}
+                        <span className="text-white/25 text-sm hidden md:block group-hover:hidden">
                           {formatDate(session.created_at)}
                         </span>
                         
-                        {/* Delete Button - Shows on Hover */}
+                        {/* Delete Button - Always visible on mobile, shows on hover on desktop */}
                         <button
                           onClick={(e) => handleDeleteSession(session.id, e)}
-                          className="hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all hover:bg-red-500/10"
+                          className="flex md:hidden md:group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all hover:bg-red-500/10"
                           style={{ 
                             color: 'rgba(239, 68, 68, 0.85)',
                             border: '1px solid rgba(239, 68, 68, 0.2)',
                           }}
+                          title="Delete session"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Delete</span>
+                          <span className="hidden lg:inline">Delete</span>
                         </button>
                         
+                        {/* Chevron - Clickable area */}
                         <div 
                           onClick={() => navigate(`/sessions/${session.id}/chat`)}
                           className="flex items-center justify-center w-8 h-8 rounded-lg group-hover:bg-white/5 transition-all"
