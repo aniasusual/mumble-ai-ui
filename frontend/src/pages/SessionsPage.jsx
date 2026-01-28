@@ -17,19 +17,6 @@ import {
   DialogTitle,
 } from '../components/ui/dialog';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '../components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../components/ui/popover';
-import {
   Plus,
   User,
   Settings,
@@ -41,6 +28,7 @@ import {
   ChevronRight,
   Check,
   ChevronsUpDown,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
