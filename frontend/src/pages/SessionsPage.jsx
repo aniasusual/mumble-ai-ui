@@ -80,7 +80,8 @@ const SessionsPage = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [baseLanguage, setBaseLanguage] = useState(user?.base_language || 'English');
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
-  const [languagePopoverOpen, setLanguagePopoverOpen] = useState(false);
+  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
+  const [languageSearch, setLanguageSearch] = useState('');
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
