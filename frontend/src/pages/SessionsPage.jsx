@@ -523,7 +523,6 @@ const SessionsPage = () => {
                         }}
                       />
                     </button>
-                    </button>
 
                     {/* Dropdown Panel */}
                     {languageDropdownOpen && (
