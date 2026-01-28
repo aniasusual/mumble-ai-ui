@@ -665,7 +665,8 @@ const SessionsPage = () => {
                             )}
                           </div>
                         </div>
-                      </>
+                      </>,
+                      document.body
                     )}
                   </div>
                 </div>
