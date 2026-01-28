@@ -35,12 +35,12 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
         onClick={onClose}
       />
 
-      {/* Side Panel - Minimal */}
+      {/* Side Panel - Matching Product Style */}
       <div
         className="fixed top-0 right-0 bottom-0 z-50 flex flex-col shadow-2xl"
         style={{
           width: width,
-          background: "rgba(0, 0, 0, 0.98)",
+          background: "rgba(10, 10, 10, 0.95)",
           backdropFilter: "blur(32px)",
           WebkitBackdropFilter: "blur(32px)",
           borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
