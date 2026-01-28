@@ -68,6 +68,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: var(--bg-page);
   color: var(--text-body);
+  letter-spacing: -0.01em;
 }
 
 code {
