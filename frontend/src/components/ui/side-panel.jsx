@@ -35,7 +35,7 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "420px" }) => {
         onClick={onClose}
       />
 
-      {/* Side Panel - Responsive & Opaque */}
+      {/* Side Panel - Opaque Glass Effect */}
       <div
         className="fixed z-50 flex flex-col shadow-2xl rounded-2xl overflow-hidden"
         style={{
@@ -44,10 +44,11 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "420px" }) => {
           bottom: "16px",
           width: "calc(100% - 32px)",
           maxWidth: width,
-          background: "rgba(18, 18, 18, 1)",
-          backdropFilter: "blur(32px)",
-          WebkitBackdropFilter: "blur(32px)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "rgba(20, 20, 20, 0.92)",
+          backdropFilter: "blur(40px) saturate(180%)",
+          WebkitBackdropFilter: "blur(40px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05)",
           animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
