@@ -580,7 +580,7 @@ const SessionsPage = () => {
 
                           {/* Language List */}
                           <div 
-                            className="max-h-[320px] overflow-y-auto py-2"
+                            className="min-h-[400px] max-h-[480px] overflow-y-auto py-3"
                             style={{
                               scrollbarWidth: 'thin',
                               scrollbarColor: 'rgba(143, 236, 120, 0.3) rgba(255, 255, 255, 0.05)',
@@ -603,12 +603,13 @@ const SessionsPage = () => {
                                     <button
                                       key={lang.value}
                                       onClick={() => handleBaseLanguageChange(lang.value)}
-                                      className="w-full flex items-center gap-4 px-4 py-3.5 text-left transition-all rounded-xl group"
+                                      className="w-full flex items-center gap-4 px-4 py-4 text-left transition-all rounded-xl group"
                                       style={{
                                         background: isSelected 
                                           ? 'rgba(143, 236, 120, 0.12)' 
                                           : 'transparent',
                                         color: isSelected ? '#8FEC78' : 'rgba(255, 255, 255, 0.8)',
+                                        minHeight: '64px',
                                       }}
                                       onMouseEnter={(e) => {
                                         if (!isSelected) {
@@ -624,7 +625,7 @@ const SessionsPage = () => {
                                       }}
                                     >
                                       <div 
-                                        className="w-5 h-5 flex items-center justify-center flex-shrink-0 rounded-md transition-all"
+                                        className="w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md transition-all"
                                         style={{
                                           background: isSelected 
                                             ? 'rgba(143, 236, 120, 0.2)' 
@@ -639,8 +640,8 @@ const SessionsPage = () => {
                                           }}
                                         />
                                       </div>
-                                      <span className="text-2xl flex-shrink-0">{lang.flag}</span>
-                                      <span className="font-semibold flex-1">{lang.label}</span>
+                                      <span className="text-3xl flex-shrink-0">{lang.flag}</span>
+                                      <span className="font-semibold text-lg flex-1">{lang.label}</span>
                                     </button>
                                   );
                                 })}
