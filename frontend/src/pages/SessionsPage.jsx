@@ -208,33 +208,25 @@ const SessionsPage = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-52 mt-3 p-3 rounded-2xl border-0"
+                className="w-52 mt-3 p-2.5 rounded-2xl border-0"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                  background: 'rgba(10, 10, 10, 0.95)',
+                  backdropFilter: 'blur(24px)',
+                  WebkitBackdropFilter: 'blur(24px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
                 }}
               >
-                <div className="mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div className="mb-2.5 pb-2.5 px-1" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <p className="text-sm font-medium text-white">{user?.name}</p>
-                  <p className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{user?.email}</p>
+                  <p className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{user?.email}</p>
                 </div>
                 <div className="space-y-0.5">
                   <DropdownMenuItem 
                     onClick={() => setShowProfileModal(true)}
-                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-white/5 focus:text-white"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
                     style={{ 
-                      color: 'rgba(255, 255, 255, 0.6)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                      color: 'rgba(255, 255, 255, 0.7)',
                     }}
                   >
                     <User className="w-4 h-4 mr-3" />
@@ -242,35 +234,20 @@ const SessionsPage = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setShowSettingsModal(true)}
-                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-white/5 focus:text-white"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
                     style={{ 
-                      color: 'rgba(255, 255, 255, 0.6)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                      color: 'rgba(255, 255, 255, 0.7)',
                     }}
                   >
                     <Settings className="w-4 h-4 mr-3" />
                     Settings
                   </DropdownMenuItem>
+                  <div className="my-1.5 h-px" style={{ background: 'rgba(255, 255, 255, 0.06)' }} />
                   <DropdownMenuItem 
                     onClick={handleLogout}
-                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-red-500/10 focus:text-red-400"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
                     style={{ 
-                      color: 'rgba(255, 255, 255, 0.6)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                      e.currentTarget.style.color = '#EF4444';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                      color: 'rgba(239, 68, 68, 0.85)',
                     }}
                   >
                     <LogOut className="w-4 h-4 mr-3" />
