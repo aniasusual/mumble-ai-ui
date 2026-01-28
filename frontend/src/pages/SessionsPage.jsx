@@ -486,7 +486,7 @@ const SessionsPage = () => {
                   </div>
 
                   {/* Custom Language Dropdown */}
-                  <div className="relative">
+                  <div className="relative" style={{ isolation: 'isolate' }}>
                     <button
                       disabled={isUpdatingLanguage}
                       onClick={() => {
