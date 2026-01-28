@@ -22,6 +22,11 @@ export default defineConfig({
     open: true,
     // Development server configuration
     host: true,
+    allowedHosts: [
+      'ui-facelift-16.preview.emergentagent.com',
+      '.preview.emergentagent.com',
+      'localhost',
+    ],
   },
   build: {
     outDir: 'build',
