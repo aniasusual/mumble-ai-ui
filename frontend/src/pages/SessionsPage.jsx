@@ -491,8 +491,17 @@ const SessionsPage = () => {
                   {/* Custom Language Dropdown */}
                   <div className="relative" style={{ isolation: 'isolate' }}>
                     <button
+                      ref={languageButtonRef}
                       disabled={isUpdatingLanguage}
                       onClick={() => {
+                        if (languageButtonRef.current) {
+                          const rect = languageButtonRef.current.getBoundingClientRect();
+                          setButtonPosition({
+                            top: rect.bottom + window.scrollY,
+                            left: rect.left + window.scrollX,
+                            width: rect.width,
+                          });
+                        }
                         setLanguageDropdownOpen(!languageDropdownOpen);
                         setLanguageSearch('');
                       }}
@@ -527,12 +536,12 @@ const SessionsPage = () => {
                       />
                     </button>
 
-                    {/* Dropdown Panel */}
-                    {languageDropdownOpen && (
+                    {/* Dropdown Panel - Rendered via Portal */}
+                    {languageDropdownOpen && typeof document !== 'undefined' && createPortal(
                       <>
                         {/* Backdrop to close dropdown */}
                         <div 
-                          className="fixed inset-0 z-40 bg-black/20"
+                          className="fixed inset-0 z-[9998] bg-black/20"
                           onClick={() => {
                             setLanguageDropdownOpen(false);
                             setLanguageSearch('');
@@ -541,8 +550,11 @@ const SessionsPage = () => {
                         
                         {/* Dropdown Content */}
                         <div 
-                          className="absolute top-full left-0 right-0 mt-3 rounded-2xl overflow-hidden z-50 language-dropdown-panel"
+                          className="fixed rounded-2xl overflow-hidden z-[9999] language-dropdown-panel"
                           style={{
+                            top: `${buttonPosition.top + 12}px`,
+                            left: `${buttonPosition.left}px`,
+                            width: `${buttonPosition.width}px`,
                             background: 'rgba(15, 15, 15, 0.98)',
                             backdropFilter: 'blur(32px)',
                             WebkitBackdropFilter: 'blur(32px)',
