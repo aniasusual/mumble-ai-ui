@@ -143,6 +143,9 @@ const SessionsPage = () => {
     if (isUpdatingLanguage || language === baseLanguage) return;
 
     setIsUpdatingLanguage(true);
+    setLanguageDropdownOpen(false);
+    setLanguageSearch('');
+    
     try {
       await updateUser({ base_language: language });
       setBaseLanguage(language);
@@ -154,6 +157,11 @@ const SessionsPage = () => {
       setIsUpdatingLanguage(false);
     }
   };
+
+  // Filter languages based on search
+  const filteredLanguages = BASE_LANGUAGES.filter(lang =>
+    lang.label.toLowerCase().includes(languageSearch.toLowerCase())
+  );
 
   // Update base language when user changes
   useEffect(() => {
