@@ -371,4 +371,25 @@ html {
   scrollbar-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.05);
 }
 
+/* Enhanced menu item hover effects */
+[role="menuitem"]:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[role="menuitem"][data-destructive="true"]:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #EF4444 !important;
+}
+
+/* Command item hover effects */
+[cmdk-item][data-selected="true"] {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[cmdk-item]:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+
 
