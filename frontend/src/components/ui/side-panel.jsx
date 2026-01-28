@@ -76,7 +76,7 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "500px" }) => {
         
         @keyframes slideInRight {
           from {
-            transform: translateX(100%);
+            transform: translateX(calc(100% + 16px));
             opacity: 0;
           }
           to {
