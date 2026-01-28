@@ -24,7 +24,7 @@ const API = `${BACKEND_URL}/api`;
 const ChatPage = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  useAuth();
+  const { user } = useAuth();
   
   // Session data
   const [session, setSession] = useState(null);
@@ -156,8 +156,8 @@ const ChatPage = () => {
     setIsChatting(true);
 
     try {
-      // Call Main Agent through AgentOS
-      const result = await sendMessageToAgent(message, agentSessionId);
+      // Call Main Agent through AgentOS with user context for base_language
+      const result = await sendMessageToAgent(message, agentSessionId, user);
 
       if (!result.success) {
         throw new Error(result.error);
