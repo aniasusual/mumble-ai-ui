@@ -469,10 +469,11 @@ const SessionsPage = () => {
             <div 
               className="p-8 rounded-3xl"
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(10, 10, 10, 0.95)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
               }}
             >
               <DialogHeader>
@@ -481,20 +482,20 @@ const SessionsPage = () => {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* Base Language Setting */}
                 <div
                   className="p-5 rounded-xl"
-                  // style={{
-                  //   background: 'rgba(255, 255, 255, 0.04)',
-                  //   border: '1px solid rgba(255, 255, 255, 0.05)',
-                  // }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                  }}
                 >
-                  <div className="mb-3">
-                    <label className="text-sm font-medium text-white block mb-1">
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-white block mb-1.5">
                       Base Language
                     </label>
-                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
                       Your native language for learning
                     </p>
                   </div>
@@ -503,15 +504,15 @@ const SessionsPage = () => {
                     <PopoverTrigger asChild>
                       <button
                         disabled={isUpdatingLanguage}
-                        className="w-full h-12 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-between"
+                        className="w-full h-12 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-between hover:bg-white/5"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
+                          background: 'rgba(255, 255, 255, 0.06)',
                           color: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
                         }}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-lg">
                             {BASE_LANGUAGES.find(l => l.value === baseLanguage)?.flag}
                           </span>
                           <span>
@@ -524,35 +525,31 @@ const SessionsPage = () => {
                     <PopoverContent
                       className="w-[--radix-popover-trigger-width] p-0 border-0"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(10, 10, 10, 0.98)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6)',
                       }}
                     >
                       <Command
                         className="rounded-xl"
                         style={{
                           background: 'transparent',
-                          overflow: 'visible',
                         }}
                       >
                         <CommandInput
                           placeholder="Search language..."
-                          className="h-9 text-sm border-b"
+                          className="h-10 text-sm border-b"
                           style={{
                             color: 'rgba(255, 255, 255, 0.9)',
-                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderColor: 'rgba(255, 255, 255, 0.12)',
                           }}
                         />
                         <CommandList
-                          className="max-h-[300px] overflow-y-auto overflow-x-hidden"
-                          style={{
-                            scrollbarWidth: 'thin',
-                            scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent',
-                          }}
+                          className="max-h-[280px] overflow-y-auto overflow-x-hidden py-2"
                         >
-                          <CommandEmpty className="py-6 text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                          <CommandEmpty className="py-8 text-sm" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
                             No language found.
                           </CommandEmpty>
                           <CommandGroup>
@@ -564,16 +561,16 @@ const SessionsPage = () => {
                                   handleBaseLanguageChange(lang.value);
                                   setLanguagePopoverOpen(false);
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+                                className="flex items-center gap-3 px-3 py-2.5 cursor-pointer mx-1 rounded-lg"
                                 style={{
-                                  color: baseLanguage === lang.value ? '#8FEC78' : 'rgba(255, 255, 255, 0.7)',
+                                  color: baseLanguage === lang.value ? '#8FEC78' : 'rgba(255, 255, 255, 0.75)',
                                 }}
                               >
                                 <Check
-                                  className={`w-4 h-4 ${baseLanguage === lang.value ? 'opacity-100' : 'opacity-0'}`}
+                                  className={`w-4 h-4 flex-shrink-0 ${baseLanguage === lang.value ? 'opacity-100' : 'opacity-0'}`}
                                 />
-                                <span className="text-base">{lang.flag}</span>
-                                <span>{lang.label}</span>
+                                <span className="text-lg flex-shrink-0">{lang.flag}</span>
+                                <span className="font-medium">{lang.label}</span>
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -585,11 +582,11 @@ const SessionsPage = () => {
 
                 <button
                   onClick={handleLogout}
-                  className="w-full h-12 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full h-12 rounded-xl text-sm font-medium transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2.5"
                   style={{
                     background: 'rgba(239, 68, 68, 0.12)',
                     color: '#EF4444',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
