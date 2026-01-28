@@ -545,6 +545,7 @@ const SessionsPage = () => {
                             WebkitBackdropFilter: 'blur(32px)',
                             border: '2px solid rgba(143, 236, 120, 0.2)',
                             boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(143, 236, 120, 0.1)',
+                            minHeight: '520px',
                           }}
                         >
                           {/* Search Input */}
