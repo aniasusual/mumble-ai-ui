@@ -388,7 +388,7 @@ const SessionsPage = () => {
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
           title="Profile"
-          width="500px"
+          width="420px"
         >
           <div className="p-8 space-y-8">
             {/* User Info - Minimal */}
