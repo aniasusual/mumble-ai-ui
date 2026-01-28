@@ -430,7 +430,7 @@ const SessionsPage = () => {
           isOpen={showSettingsModal}
           onClose={() => setShowSettingsModal(false)}
           title="Settings"
-          width="500px"
+          width="420px"
         >
           <div className="p-8">
             <div className="space-y-8">
