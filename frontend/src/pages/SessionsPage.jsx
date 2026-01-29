@@ -30,6 +30,7 @@ import {
   Check,
   ChevronsUpDown,
   Search,
+  Edit2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -71,6 +72,10 @@ const SessionsPage = () => {
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [languageSearch, setLanguageSearch] = useState('');
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [renamingSession, setRenamingSession] = useState(null);
+  const [newSessionTitle, setNewSessionTitle] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
@@ -117,6 +122,43 @@ const SessionsPage = () => {
       toast.success('Session deleted');
     } catch (error) {
       toast.error('Failed to delete session');
+    }
+  };
+
+  // Open rename dialog
+  const handleOpenRename = (session, e) => {
+    e.stopPropagation();
+    setRenamingSession(session);
+    setNewSessionTitle(session.title || 'New Session');
+    setShowRenameDialog(true);
+  };
+
+  // Handle rename session
+  const handleRenameSession = async () => {
+    if (!renamingSession || !newSessionTitle.trim() || isRenaming) return;
+
+    setIsRenaming(true);
+
+    try {
+      await axios.put(`${API}/sessions/${renamingSession.id}`, {
+        title: newSessionTitle.trim()
+      });
+
+      // Update local state
+      setSessions(sessions.map(s =>
+        s.id === renamingSession.id
+          ? { ...s, title: newSessionTitle.trim() }
+          : s
+      ));
+
+      toast.success('Session renamed');
+      setShowRenameDialog(false);
+      setRenamingSession(null);
+      setNewSessionTitle('');
+    } catch (error) {
+      toast.error('Failed to rename session');
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -341,12 +383,26 @@ const SessionsPage = () => {
                         <span className="text-white/25 text-sm hidden md:block group-hover:hidden">
                           {formatDate(session.created_at)}
                         </span>
-                        
+
+                        {/* Rename Button - Shows on hover on desktop, always on mobile */}
+                        <button
+                          onClick={(e) => handleOpenRename(session, e)}
+                          className="flex md:hidden md:group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all hover:bg-white/5"
+                          style={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                          }}
+                          title="Rename session"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span className="hidden lg:inline">Rename</span>
+                        </button>
+
                         {/* Delete Button - Always visible on mobile, shows on hover on desktop */}
                         <button
                           onClick={(e) => handleDeleteSession(session.id, e)}
                           className="flex md:hidden md:group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all hover:bg-red-500/10"
-                          style={{ 
+                          style={{
                             color: 'rgba(239, 68, 68, 0.85)',
                             border: '1px solid rgba(239, 68, 68, 0.2)',
                           }}
@@ -355,9 +411,9 @@ const SessionsPage = () => {
                           <Trash2 className="w-3.5 h-3.5" />
                           <span className="hidden lg:inline">Delete</span>
                         </button>
-                        
+
                         {/* Chevron - Clickable area */}
-                        <div 
+                        <div
                           onClick={() => navigate(`/sessions/${session.id}/chat`)}
                           className="flex items-center justify-center w-8 h-8 rounded-lg group-hover:bg-white/5 transition-all"
                         >
@@ -485,9 +541,9 @@ const SessionsPage = () => {
                       <div 
                         className="absolute top-full left-0 right-0 mt-2 rounded-lg z-[101] language-dropdown-panel"
                         style={{
-                          background: 'rgba(15, 15, 15, 0.75)',
+                          background: 'rgba(0, 0, 0, 0.9)',
                           backdropFilter: 'blur(50px) saturate(180%)',
-                          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+                          // WebkitBackdropFilter: 'blur(50px) saturate(180%)',
                           border: '1px solid rgba(255, 255, 255, 0.12)',
                           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
                         }}
@@ -606,6 +662,118 @@ const SessionsPage = () => {
             </div>
           </div>
         </SidePanel>
+
+        {/* Rename Session Dialog */}
+        <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+          <DialogContent
+            className="rounded-2xl border-0 p-0 overflow-hidden"
+            style={{
+              background: 'transparent',
+              opacity: 0.98,
+              backdropFilter: 'blur(50px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
+              maxWidth: '440px',
+            }}
+          >
+            <DialogHeader className="p-6 pb-4">
+              <DialogTitle className="text-xl font-medium text-white">
+                Rename Session
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="px-6 pb-6">
+              <div className="space-y-4">
+                {/* Session Title Input */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Session Title
+                  </label>
+                  <input
+                    type="text"
+                    value={newSessionTitle}
+                    onChange={(e) => setNewSessionTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleRenameSession();
+                      }
+                    }}
+                    className="w-full h-12 px-4 rounded-lg text-sm outline-none transition-all"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'rgba(143, 236, 120, 0.4)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                    placeholder="Enter session title..."
+                    autoFocus
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowRenameDialog(false);
+                      setRenamingSession(null);
+                      setNewSessionTitle('');
+                    }}
+                    className="flex-1 h-11 rounded-lg text-sm font-normal transition-all"
+                    style={{
+                      background: 'transparent',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRenameSession}
+                    disabled={isRenaming || !newSessionTitle.trim()}
+                    className="flex-1 h-11 rounded-lg text-sm font-normal transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style={{
+                      background: 'transparent',
+                      color: '#8FEC78',
+                      border: '1px solid rgba(143, 236, 120, 0.3)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isRenaming && newSessionTitle.trim()) {
+                        e.currentTarget.style.background = 'rgba(143, 236, 120, 0.08)';
+                        e.currentTarget.style.borderColor = 'rgba(143, 236, 120, 0.4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = 'rgba(143, 236, 120, 0.3)';
+                    }}
+                  >
+                    {isRenaming ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Renaming...
+                      </>
+                    ) : (
+                      'Rename'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MeshGradientBackground>
   );

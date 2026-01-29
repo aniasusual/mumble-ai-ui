@@ -174,8 +174,17 @@ export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, u
       console.log("Passing base_language dependency (streaming):", user.base_language);
     }
 
+    // Get token from localStorage for authentication
+    const token = localStorage.getItem('token');
+    const headers = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${BACKEND_URL}/teams/${AGENT_ID}/runs`, {
       method: 'POST',
+      headers: headers,
       body: formData,
     });
 
