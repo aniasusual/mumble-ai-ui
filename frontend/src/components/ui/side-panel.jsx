@@ -28,7 +28,7 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "420px" }) => {
     <>
       {/* Backdrop - More Opaque */}
       <div
-        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
         style={{
           animation: "fadeIn 0.25s ease-out",
         }}
@@ -44,7 +44,8 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "420px" }) => {
           bottom: "16px",
           width: "calc(100% - 32px)",
           maxWidth: width,
-          background: "rgba(15, 15, 15, 0.75)",
+          background: "transparent",
+          opacity: 1,
           backdropFilter: "blur(50px) saturate(180%)",
           WebkitBackdropFilter: "blur(50px) saturate(180%)",
           border: "1px solid rgba(255, 255, 255, 0.12)",
