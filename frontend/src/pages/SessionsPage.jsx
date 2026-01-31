@@ -250,23 +250,21 @@ const JobsPage = () => {
                 align="end" 
                 className="w-52 mt-3 p-2.5 rounded-2xl border-0"
                 style={{
-                  background: 'rgba(10, 10, 10, 0.95)',
-                  backdropFilter: 'blur(24px)',
-                  WebkitBackdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                  background: '#0f1115',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: '0 16px 50px rgba(0, 0, 0, 0.6)',
                 }}
               >
                 <div className="mb-2.5 pb-2.5 px-1" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <p className="text-sm font-medium text-white">{user?.name}</p>
-                  <p className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{user?.email}</p>
+                  <p className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{user?.email}</p>
                 </div>
                 <div className="space-y-0.5">
                   <DropdownMenuItem 
                     onClick={() => setShowProfileModal(true)}
-                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 text-white/80 focus:text-white focus:bg-white/5"
                     style={{ 
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: 'rgba(255, 255, 255, 0.8)',
                     }}
                   >
                     <User className="w-4 h-4 mr-3" />
@@ -274,18 +272,18 @@ const JobsPage = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setShowSettingsModal(true)}
-                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 text-white/80 focus:text-white focus:bg-white/5"
                     style={{ 
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: 'rgba(255, 255, 255, 0.8)',
                     }}
                   >
                     <Settings className="w-4 h-4 mr-3" />
                     Settings
                   </DropdownMenuItem>
-                  <div className="my-1.5 h-px" style={{ background: 'rgba(255, 255, 255, 0.06)' }} />
+                  <div className="my-1.5 h-px" style={{ background: 'rgba(255, 255, 255, 0.08)' }} />
                   <DropdownMenuItem 
                     onClick={handleLogout}
-                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3"
+                    className="rounded-lg cursor-pointer text-sm py-2.5 px-3 focus:bg-red-500/10"
                     style={{ 
                       color: 'rgba(239, 68, 68, 0.85)',
                     }}
