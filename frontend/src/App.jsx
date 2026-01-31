@@ -7,7 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
-import SessionsPage from "./pages/SessionsPage";
+import JobsPage from "./pages/SessionsPage";
 import ChatPage from "./pages/ChatPage";
 import ChatHistoryPage from "./pages/ChatHistoryPage";
 
@@ -36,15 +36,15 @@ function App() {
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route 
-              path="/sessions" 
+              path="/jobs" 
               element={
                 <ProtectedRoute>
-                  <SessionsPage />
+                  <JobsPage />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/sessions/:sessionId/chat" 
+              path="/jobs/:jobId/chat" 
               element={
                 <ProtectedRoute>
                   <ChatPage />
@@ -52,7 +52,7 @@ function App() {
               } 
             />
             <Route 
-              path="/sessions/:sessionId/history" 
+              path="/jobs/:jobId/history" 
               element={
                 <ProtectedRoute>
                   <ChatHistoryPage />

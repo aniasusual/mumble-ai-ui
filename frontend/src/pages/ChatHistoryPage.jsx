@@ -11,33 +11,33 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ChatHistoryPage = () => {
-  const { sessionId } = useParams();
+  const { jobId } = useParams();
   const navigate = useNavigate();
   
-  const [session, setSession] = useState(null);
+  const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState([]);
 
-  // Fetch session data
+  // Fetch job data
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchJob = async () => {
       try {
-        const response = await axios.get(`${API}/sessions/${sessionId}`);
-        setSession(response.data);
+        const response = await axios.get(`${API}/jobs/${jobId}`);
+        setJob(response.data);
         if (response.data.chat_history) {
           setMessages(response.data.chat_history);
         }
       } catch (error) {
-        console.error('Failed to fetch session:', error);
-        toast.error('Session not found');
-        navigate('/sessions');
+        console.error('Failed to fetch job:', error);
+        toast.error('Job not found');
+        navigate('/jobs');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchSession();
-  }, [sessionId, navigate]);
+    fetchJob();
+  }, [jobId, navigate]);
 
   if (isLoading) {
     return (
@@ -57,7 +57,7 @@ const ChatHistoryPage = () => {
           <nav className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                to={`/sessions/${sessionId}/chat`}
+                to={`/jobs/${jobId}/chat`}
                 className="p-2 -ml-2 rounded-full transition-all hover:bg-white/10"
               >
                 <ArrowLeft className="w-5 h-5 text-white/70" />
@@ -79,7 +79,7 @@ const ChatHistoryPage = () => {
                 Chat History
               </h1>
               <p className="text-white/40 text-sm">
-                {session?.title || 'New Session'}
+                {job?.title || 'New Job'}
               </p>
             </div>
 
@@ -129,7 +129,7 @@ const ChatHistoryPage = () => {
             {/* Back to Chat Button */}
             <div className="mt-12 text-center">
               <Link
-                to={`/sessions/${sessionId}/chat`}
+                to={`/jobs/${jobId}/chat`}
                 className="inline-flex items-center gap-2 text-sm font-medium transition-all hover:opacity-80"
                 style={{ color: '#8FEC78' }}
               >

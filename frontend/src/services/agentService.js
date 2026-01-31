@@ -6,29 +6,34 @@ const AGENT_ID = 'mumble-ai-coach';
 /**
  * Send message to Main Agent (orchestrator)
  * @param {string} message - User message
- * @param {string} sessionId - Optional AgentOS session ID for continuity
+ * @param {string} jobId - Optional job identifier (mapped to AgentOS session_id)
  * @param {object} user - User object with base_language
  * @returns {Promise} Response from agent
  */
-export const sendMessageToAgent = async (message, sessionId = null, user = null) => {
+export const sendMessageToAgent = async (message, jobId = null, user = null) => {
   try {
     const formData = new FormData();
     formData.append('message', message);
     formData.append('stream', 'false');
     formData.append('monitor', 'true');
 
-    console.log("sessionId: ", sessionId)
+    console.log("jobId: ", jobId);
 
-    if (sessionId) {
-      formData.append('session_id', sessionId);
+    if (jobId) {
+      formData.append('session_id', jobId);
     }
 
     // Pass base_language as dependency for agent runtime injection
     if (user?.base_language) {
       formData.append('dependencies', JSON.stringify({
-        base_language: user.base_language
+        base_language: user.base_language,
+        job_id: jobId || undefined,
       }));
       console.log("Passing base_language dependency:", user.base_language);
+    } else if (jobId) {
+      formData.append('dependencies', JSON.stringify({
+        job_id: jobId,
+      }));
     }
 
     const response = await axios.post(
@@ -47,7 +52,7 @@ export const sendMessageToAgent = async (message, sessionId = null, user = null)
     return {
       success: true,
       content: response.data.content || response.data.response || '',
-      sessionId: response.data.session_id || sessionId,
+      jobId: response.data.session_id || jobId,
       metrics: response.data.metrics,
       memberResponses: response.data.member_responses || [],
     };
@@ -61,10 +66,10 @@ export const sendMessageToAgent = async (message, sessionId = null, user = null)
 };
 
 /**
- * Create new AgentOS session
- * @returns {Promise} Session data
+ * Create new AgentOS job session
+ * @returns {Promise} Job session data
  */
-export const createAgentSession = async () => {
+export const createAgentJob = async () => {
   try {
     const response = await axios.post(
       `${BACKEND_URL}/teams/${AGENT_ID}/sessions`,
@@ -78,27 +83,27 @@ export const createAgentSession = async () => {
 
     return {
       success: true,
-      sessionId: response.data.session_id || response.data.id,
+      jobId: response.data.session_id || response.data.id,
       data: response.data,
     };
   } catch (error) {
-    console.error('Create session error:', error);
+    console.error('Create job error:', error);
     return {
       success: false,
-      error: error.response?.data?.detail || error.message || 'Failed to create session',
+      error: error.response?.data?.detail || error.message || 'Failed to create job',
     };
   }
 };
 
 /**
- * Get AgentOS session history
- * @param {string} sessionId - AgentOS session ID
- * @returns {Promise} Session history
+ * Get AgentOS job history
+ * @param {string} jobId - AgentOS job ID (session_id)
+ * @returns {Promise} Job history
  */
-export const getAgentSessionHistory = async (sessionId) => {
+export const getAgentJobHistory = async (jobId) => {
   try {
     const response = await axios.get(
-      `${BACKEND_URL}/teams/${AGENT_ID}/sessions/${sessionId}`,
+      `${BACKEND_URL}/teams/${AGENT_ID}/sessions/${jobId}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -112,19 +117,19 @@ export const getAgentSessionHistory = async (sessionId) => {
       data: response.data,
     };
   } catch (error) {
-    console.error('Get session history error:', error);
+    console.error('Get job history error:', error);
     return {
       success: false,
-      error: error.response?.data?.detail || error.message || 'Failed to fetch session history',
+      error: error.response?.data?.detail || error.message || 'Failed to fetch job history',
     };
   }
 };
 
 /**
- * List all AgentOS sessions
- * @returns {Promise} List of sessions
+ * List all AgentOS jobs
+ * @returns {Promise} List of jobs
  */
-export const listAgentSessions = async () => {
+export const listAgentJobs = async () => {
   try {
     const response = await axios.get(
       `${BACKEND_URL}/teams/${AGENT_ID}/sessions`,
@@ -137,13 +142,13 @@ export const listAgentSessions = async () => {
 
     return {
       success: true,
-      sessions: response.data.sessions || response.data || [],
+      jobs: response.data.sessions || response.data || [],
     };
   } catch (error) {
-    console.error('List sessions error:', error);
+    console.error('List jobs error:', error);
     return {
       success: false,
-      error: error.response?.data?.detail || error.message || 'Failed to list sessions',
+      error: error.response?.data?.detail || error.message || 'Failed to list jobs',
     };
   }
 };
@@ -151,27 +156,32 @@ export const listAgentSessions = async () => {
 /**
  * Send message with streaming response
  * @param {string} message - User message
- * @param {string} sessionId - Optional AgentOS session ID
+ * @param {string} jobId - Optional AgentOS job ID (session_id)
  * @param {Function} onChunk - Callback for each stream chunk
  * @param {object} user - User object with base_language
  * @returns {Promise} Final response
  */
-export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, user = null) => {
+export const sendMessageToAgentStreaming = async (message, jobId, onChunk, user = null) => {
   try {
     const formData = new FormData();
     formData.append('message', message);
     formData.append('stream', 'true');
     formData.append('monitor', 'true');
-    if (sessionId) {
-      formData.append('session_id', sessionId);
+    if (jobId) {
+      formData.append('session_id', jobId);
     }
 
     // Pass base_language as dependency for agent runtime injection
     if (user?.base_language) {
       formData.append('dependencies', JSON.stringify({
-        base_language: user.base_language
+        base_language: user.base_language,
+        job_id: jobId || undefined,
       }));
       console.log("Passing base_language dependency (streaming):", user.base_language);
+    } else if (jobId) {
+      formData.append('dependencies', JSON.stringify({
+        job_id: jobId,
+      }));
     }
 
     // Get token from localStorage for authentication
@@ -196,7 +206,7 @@ export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, u
     const decoder = new TextDecoder();
 
     let fullContent = '';
-    let finalSessionId = sessionId;
+    let finalJobId = jobId;
     let buffer = '';
 
     return new Promise((resolve, reject) => {
@@ -209,7 +219,7 @@ export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, u
               resolve({
                 success: true,
                 content: fullContent,
-                sessionId: finalSessionId,
+                jobId: finalJobId,
               });
               break;
             }
@@ -229,14 +239,14 @@ export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, u
                   }
 
                   if (data.session_id) {
-                    finalSessionId = data.session_id;
+                    finalJobId = data.session_id;
                   }
 
                   if (data.done || data.event === 'agent_response_complete') {
                     resolve({
                       success: true,
                       content: fullContent,
-                      sessionId: finalSessionId,
+                      jobId: finalJobId,
                     });
                     return;
                   }
@@ -261,7 +271,7 @@ export const sendMessageToAgentStreaming = async (message, sessionId, onChunk, u
         resolve({
           success: true,
           content: fullContent,
-          sessionId: finalSessionId,
+          jobId: finalJobId,
         });
       }, 60000);
     });
