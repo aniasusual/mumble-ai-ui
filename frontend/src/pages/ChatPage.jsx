@@ -541,7 +541,7 @@ const ChatPage = () => {
                   if (msg.role === 'user') {
                     return (
                       <div key={idx} className="flex justify-end">
-                        <div className="max-w-[80%] rounded-2xl bg-[#8FEC78]/15 border border-[#8FEC78]/30 px-4 py-3 text-white/90 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+                        <div className="max-w-[80%] rounded-2xl bg-[#163c27] border border-[#8FEC78]/30 px-4 py-3 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
                           <p className="text-sm uppercase tracking-[0.2em] text-white/40">You</p>
                           <p className="mt-2 text-base leading-relaxed">{msg.content}</p>
                         </div>
@@ -563,7 +563,7 @@ const ChatPage = () => {
                   if (msg.isSubagent) {
                     return (
                       <div key={idx} className="flex justify-start">
-                        <div className="w-full rounded-2xl border border-[#8FEC78]/25 bg-[#8FEC78]/5 px-4 py-4 text-white/90 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+                          <div className="w-full rounded-2xl border border-[#8FEC78]/25 bg-[#0f261a] px-4 py-4 text-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
                           <div className="flex items-center justify-between gap-4">
                             <div>
                               <p className="text-xs uppercase tracking-[0.25em] text-[#8FEC78]/80">Coach feedback</p>
@@ -579,14 +579,14 @@ const ChatPage = () => {
                   return (
                     <div key={idx} className="space-y-3">
                       <div className="flex justify-start">
-                        <div className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/90">
+                        <div className="w-full rounded-2xl border border-white/10 bg-[#12151a] px-4 py-3 text-white">
                           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Main coach</p>
                           <p className="mt-2 text-base leading-relaxed">{msg.content}</p>
                         </div>
                       </div>
                       {moduleMeta && (
                         <div className="flex justify-start">
-                          <div className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                          <div className="w-full rounded-2xl border border-white/10 bg-[#161b22] px-4 py-4">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex items-start gap-3">
                                 <div className="h-10 w-10 rounded-2xl border border-white/10 bg-black/30 flex items-center justify-center text-white/70">
