@@ -11,7 +11,7 @@ import { ArrowRight, Send, Mic, Volume2, VolumeX, Play, LogIn } from 'lucide-rea
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const LandingPage = () => {
@@ -23,7 +23,7 @@ const LandingPage = () => {
   // Chat states
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
-  const [sessionId, setSessionId] = useState(() => `session-${Date.now()}`);
+  const [jobId, setJobId] = useState(() => `job-${Date.now()}`);
   const [currentResponse, setCurrentResponse] = useState('');
   
   // Audio states
@@ -113,11 +113,11 @@ const LandingPage = () => {
     try {
       const response = await axios.post(`${API}/chat-voice`, {
         message: message,
-        session_id: sessionId
+        job_id: jobId
       }, { timeout: 30000 });
       
       setCurrentResponse(response.data.response);
-      setSessionId(response.data.session_id);
+      setJobId(response.data.job_id);
       
       if (response.data.audio) {
         playAudioFromBase64(response.data.audio);
@@ -130,7 +130,7 @@ const LandingPage = () => {
     } finally {
       setIsChatting(false);
     }
-  }, [isChatting, sessionId, playAudioFromBase64]);
+  }, [isChatting, jobId, playAudioFromBase64]);
 
   // Trigger intro after user clicks "Enter" button
   useEffect(() => {
@@ -147,12 +147,12 @@ const LandingPage = () => {
       try {
         const response = await axios.post(`${API}/chat-voice`, {
           message: "Introduce yourself briefly as Mia, the AI language tutor for Mumble",
-          session_id: sessionId
+          job_id: jobId
         }, { timeout: 30000 });
         
         console.log('AI intro response received:', response.data.response);
         setCurrentResponse(response.data.response);
-        setSessionId(response.data.session_id);
+        setJobId(response.data.job_id);
         
         // Play intro audio - will work because user already interacted
         if (response.data.audio && audioRef.current) {
@@ -177,7 +177,7 @@ const LandingPage = () => {
     
     // Start intro after a small delay to ensure smooth transition
     setTimeout(introduceAI, 300);
-  }, [hasEntered, sessionId]);
+  }, [hasEntered, jobId]);
 
   // Set loaded state
   useEffect(() => {
@@ -304,10 +304,10 @@ const LandingPage = () => {
               <span>Meet Mia</span>
             </button>
             
-            {/* Sign In / Go to Sessions button */}
+            {/* Sign In / Go to Jobs button */}
             {isAuthenticated ? (
               <Link
-                to="/sessions"
+                to="/jobs"
                 className="flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -316,7 +316,7 @@ const LandingPage = () => {
                   boxShadow: '0 0 20px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.03)',
                 }}
               >
-                <span>Go to Sessions</span>
+                <span>Go to Jobs</span>
                 <ArrowRight size={16} />
               </Link>
             ) : (
@@ -391,7 +391,7 @@ const LandingPage = () => {
               
               {isAuthenticated ? (
                 <Link
-                  to="/sessions"
+                  to="/jobs"
                   className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
                   style={{
                     background: 'rgba(255, 255, 255, 0.05)',
@@ -400,7 +400,7 @@ const LandingPage = () => {
                     boxShadow: '0 0 15px rgba(255, 255, 255, 0.05)',
                   }}
                 >
-                  Sessions
+                  Jobs
                 </Link>
               ) : (
                 <Link
@@ -568,7 +568,7 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* CTA Section - Sign In/Up or Go to Sessions */}
+          {/* CTA Section - Sign In/Up or Go to Jobs */}
           <div className="w-full max-w-md">
             <div 
               className="relative p-6 rounded-2xl text-center"
@@ -585,7 +585,7 @@ const LandingPage = () => {
                     Ready to continue your learning journey?
                   </p>
                   <Link
-                    to="/sessions"
+                    to="/jobs"
                     className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all duration-300 hover:scale-105"
                     style={{
                       background: 'linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%)',
@@ -594,7 +594,7 @@ const LandingPage = () => {
                       boxShadow: '0 0 30px rgba(143, 236, 120, 0.25), inset 0 0 20px rgba(143, 236, 120, 0.1)',
                     }}
                   >
-                    Go to Sessions
+                    Go to Jobs
                     <ArrowRight size={18} />
                   </Link>
                 </>

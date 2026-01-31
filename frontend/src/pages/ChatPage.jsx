@@ -1,118 +1,176 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import MeshGradientBackground from '../components/MeshGradientBackground';
 import MumbleLogo from '../components/MumbleLogo';
-import LiquidOrb from '../components/LiquidOrb';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/ui/input';
 import {
   ArrowLeft,
   Send,
   Mic,
-  Volume2,
-  VolumeX,
   Loader2,
-  MessageSquare,
+  Sparkles,
+  BookOpenText,
+  PenLine,
+  Headphones,
+  Speech,
+  CheckCircle2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { sendMessageToAgent } from '../services/agentService';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+const PRACTICE_MODULES = {
+  writing: {
+    name: 'Writing Lab',
+    type: 'writing',
+    focus: 'Structure and clarity',
+    icon: PenLine,
+  },
+  pronunciation: {
+    name: 'Pronunciation Studio',
+    type: 'pronunciation',
+    focus: 'Sounds, stress, rhythm',
+    icon: Headphones,
+  },
+  reading: {
+    name: 'Reading Flow',
+    type: 'reading',
+    focus: 'Pacing and intonation',
+    icon: BookOpenText,
+  },
+  speaking: {
+    name: 'Speaking Sprint',
+    type: 'speaking',
+    focus: 'Fluency and confidence',
+    icon: Speech,
+  },
+  vocabulary: {
+    name: 'Vocabulary Boost',
+    type: 'vocabulary',
+    focus: 'New words in context',
+    icon: Sparkles,
+  },
+  grammar: {
+    name: 'Grammar Focus',
+    type: 'grammar',
+    focus: 'Accuracy and corrections',
+    icon: CheckCircle2,
+  },
+};
+
+const detectPracticeModule = (text) => {
+  if (!text) return null;
+  const lowered = text.toLowerCase();
+  if (lowered.includes('pronunciation') || lowered.includes('pronounce')) return 'pronunciation';
+  if (lowered.includes('writing') || lowered.includes('write')) return 'writing';
+  if (lowered.includes('reading') || lowered.includes('read')) return 'reading';
+  if (lowered.includes('speaking') || lowered.includes('conversation') || lowered.includes('talk')) return 'speaking';
+  if (lowered.includes('vocabulary') || lowered.includes('vocab') || lowered.includes('word')) return 'vocabulary';
+  if (lowered.includes('grammar')) return 'grammar';
+  return null;
+};
+
 const ChatPage = () => {
-  const { sessionId } = useParams();
+  const { jobId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  // Session data
-  const [session, setSession] = useState(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  
+
+  // Job data
+  const [job, setJob] = useState(null);
+  const [isLoadingJob, setIsLoadingJob] = useState(true);
+
   // Chat states
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
-  const [currentResponse, setCurrentResponse] = useState('');
-  const [chatSessionId, setChatSessionId] = useState(() => `chat-${sessionId}-${Date.now()}`);
-  
+  const [agentJobId, setAgentJobId] = useState(null);
+
   // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  
+
   // Voice input states
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  
-  // Input focus state
-  const [inputFocused, setInputFocused] = useState(false);
-  
+
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
+  const chatEndRef = useRef(null);
 
-  // Fetch session data
+  const [activeModule, setActiveModule] = useState(null);
+
+  // Fetch job data
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchJob = async () => {
       try {
-        const response = await axios.get(`${API}/sessions/${sessionId}`);
-        setSession(response.data);
+        const response = await axios.get(`${API}/jobs/${jobId}`);
+        setJob(response.data);
+
+        // Restore AgentOS job ID if it exists (fallback to jobId)
+        setAgentJobId(response.data.agent_job_id || jobId);
+
         // Load existing chat history if available
         if (response.data.chat_history) {
           setMessages(response.data.chat_history);
-          if (response.data.chat_history.length > 0) {
-            const lastAssistantMsg = [...response.data.chat_history].reverse().find(m => m.role === 'assistant');
-            if (lastAssistantMsg) {
-              setCurrentResponse(lastAssistantMsg.content);
-            }
-          }
         }
       } catch (error) {
-        console.error('Failed to fetch session:', error);
-        toast.error('Session not found');
-        navigate('/sessions');
+        console.error('Failed to fetch job:', error);
+        toast.error('Job not found');
+        navigate('/jobs');
       } finally {
-        setIsLoadingSession(false);
+        setIsLoadingJob(false);
       }
     };
-    
-    fetchSession();
-  }, [sessionId, navigate]);
 
-  // Save chat history to session
-  const saveChatHistory = useCallback(async (newMessages) => {
+    fetchJob();
+  }, [jobId, navigate]);
+
+  // Save chat history to job
+  const saveChatHistory = useCallback(async (newMessages, agentIdOverride = null) => {
     try {
-      await axios.put(`${API}/sessions/${sessionId}`, {
-        chat_history: newMessages
-      });
+      const updateData = {
+        chat_history: newMessages,
+      };
+
+      // Save AgentOS job ID if provided
+      if (agentIdOverride) {
+        updateData.agent_job_id = agentIdOverride;
+      }
+
+      await axios.put(`${API}/jobs/${jobId}`, updateData);
     } catch (error) {
       console.error('Failed to save chat history:', error);
     }
-  }, [sessionId]);
+  }, [jobId]);
 
   // Initialize speech recognition
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
+
     if (SpeechRecognition) {
       setSpeechSupported(true);
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-      
+
       recognition.onresult = (event) => {
         const transcript = Array.from(event.results)
           .map(result => result[0].transcript)
           .join('');
-        
+
         setChatInput(transcript);
-        
+
         if (event.results[0].isFinal) {
           setIsListening(false);
         }
       };
-      
+
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
@@ -120,14 +178,14 @@ const ChatPage = () => {
           toast.error('Microphone access denied');
         }
       };
-      
+
       recognition.onend = () => {
         setIsListening(false);
       };
-      
+
       recognitionRef.current = recognition;
     }
-    
+
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
@@ -135,55 +193,64 @@ const ChatPage = () => {
     };
   }, []);
 
-  // Play audio from base64
-  const playAudioFromBase64 = useCallback((base64Audio) => {
-    if (isMuted || !audioRef.current) return;
-    
-    const audioSrc = `data:audio/mpeg;base64,${base64Audio}`;
-    audioRef.current.src = audioSrc;
-    audioRef.current.onplay = () => setIsSpeaking(true);
-    audioRef.current.onended = () => setIsSpeaking(false);
-    audioRef.current.onerror = () => setIsSpeaking(false);
-    
-    audioRef.current.play().catch(e => {
-      console.log('Audio playback failed:', e);
-      setIsSpeaking(false);
-    });
-  }, [isMuted]);
-
-  // Send message to Mia
+  // Send message to Main Agent
   const sendMessage = useCallback(async (message, isIntro = false) => {
     if (!message.trim() || isChatting) return;
-    
+
     let updatedMessages = [...messages];
-    
+
     // Add user message to chat
     if (!isIntro) {
       updatedMessages = [...messages, { role: 'user', content: message }];
       setMessages(updatedMessages);
       setChatInput('');
     }
-    
+
     setIsChatting(true);
-    setCurrentResponse('');
-    
+
     try {
-      const response = await axios.post(`${API}/chat-voice`, {
-        message: message,
-        session_id: chatSessionId
-      }, { timeout: 30000 });
-      
-      // Add AI response
-      const newMessages = [...updatedMessages, { role: 'assistant', content: response.data.response }];
-      setMessages(newMessages);
-      setCurrentResponse(response.data.response);
-      
-      // Save to session
-      saveChatHistory(newMessages);
-      
-      if (response.data.audio) {
-        playAudioFromBase64(response.data.audio);
+      // Call Main Agent through AgentOS with user context for base_language
+      const result = await sendMessageToAgent(message, agentJobId || jobId, user);
+
+      if (!result.success) {
+        throw new Error(result.error);
       }
+
+      // Store AgentOS job ID for continuity
+      let newAgentJobId = agentJobId || jobId;
+      if (result.jobId && !agentJobId) {
+        newAgentJobId = result.jobId;
+        setAgentJobId(result.jobId);
+      }
+
+      let allNewMessages = [...updatedMessages];
+
+      // Add subagent responses if any (before main agent response)
+      if (result.memberResponses && result.memberResponses.length > 0) {
+        for (const memberResponse of result.memberResponses) {
+          allNewMessages.push({
+            role: 'assistant',
+            content: memberResponse.content,
+            agentName: memberResponse.agent_name || 'Agent',
+            agentId: memberResponse.agent_id,
+            isSubagent: true,
+          });
+        }
+      }
+
+      // Add Main Agent response
+      allNewMessages.push({
+        role: 'assistant',
+        content: result.content,
+        agentName: 'Main Coach',
+        isSubagent: false,
+      });
+
+      setMessages(allNewMessages);
+
+      // Save to backend job storage (include agent job ID if it was just set)
+      saveChatHistory(allNewMessages, !agentJobId && newAgentJobId ? newAgentJobId : null);
+
     } catch (error) {
       console.error('Chat error:', error);
       if (!isIntro) {
@@ -192,34 +259,30 @@ const ChatPage = () => {
     } finally {
       setIsChatting(false);
     }
-  }, [isChatting, chatSessionId, messages, playAudioFromBase64, saveChatHistory]);
+  }, [isChatting, agentJobId, jobId, messages, saveChatHistory, user]);
 
-  // Trigger intro message when session loads (only for new sessions)
+  // Trigger intro message when job loads (only for new jobs)
   useEffect(() => {
-    if (!session || introCalledRef.current || isLoadingSession) return;
-    
+    if (!job || introCalledRef.current || isLoadingJob) return;
+
     // Only send intro if no chat history exists
-    if (session.chat_history && session.chat_history.length > 0) {
+    if (job.chat_history && job.chat_history.length > 0) {
       introCalledRef.current = true;
       return;
     }
-    
-    introCalledRef.current = true;
-    
-    // New session - Mia asks about language preferences
-    const introMessage = `This is a new learning session. Greet the user warmly and ask them which language they would like to learn today. Keep it brief and friendly.`;
-    
-    sendMessage(introMessage, true);
-  }, [session, isLoadingSession, sendMessage]);
 
-  // Toggle mute
-  const toggleMute = () => {
-    if (audioRef.current && !audioRef.current.paused) {
-      audioRef.current.pause();
-      setIsSpeaking(false);
-    }
-    setIsMuted(!isMuted);
-  };
+    introCalledRef.current = true;
+
+    // New job - Agent introduces itself
+    const introMessage = "Hello! I'm your language learning coach.";
+
+    sendMessage(introMessage, true);
+  }, [job, isLoadingJob, sendMessage]);
+
+  useEffect(() => {
+    if (!chatEndRef.current) return;
+    chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isChatting]);
 
   // Toggle voice input
   const toggleListening = () => {
@@ -227,7 +290,7 @@ const ChatPage = () => {
       toast.error('Voice input not supported in this browser');
       return;
     }
-    
+
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
@@ -236,10 +299,10 @@ const ChatPage = () => {
         audioRef.current.pause();
         setIsSpeaking(false);
       }
-      
+
       setChatInput('');
       setIsListening(true);
-      
+
       try {
         recognitionRef.current?.start();
       } catch (e) {
@@ -264,7 +327,167 @@ const ChatPage = () => {
     }
   };
 
-  if (isLoadingSession) {
+  const renderPracticeModule = (module) => {
+    if (!module) return null;
+
+    switch (module.type) {
+      case 'writing':
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Writing prompt</p>
+              <p className="mt-2 text-white/90">Describe a memorable meal you had recently. Focus on details and sequence.</p>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <textarea
+                  rows={6}
+                  placeholder="Write your response here..."
+                  className="w-full bg-transparent text-white/90 placeholder:text-white/30 focus:outline-none"
+                />
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
+                  Submit writing
+                </button>
+                <span className="text-xs text-white/40">You can edit before submitting.</span>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach checklist</p>
+              <ul className="mt-3 space-y-2 text-sm text-white/70">
+                <li>Clear beginning, middle, end.</li>
+                <li>At least 3 descriptive adjectives.</li>
+                <li>Use past tense consistently.</li>
+              </ul>
+            </div>
+          </div>
+        );
+      case 'pronunciation':
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Target phrase</p>
+              <p className="mt-2 text-white text-lg">"Could you repeat that more slowly?"</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
+                  Record attempt
+                </button>
+                <button className="px-4 py-2 rounded-full text-sm text-white/60 border border-white/10 bg-white/5">
+                  Hear model
+                </button>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Feedback focus</p>
+              <ul className="mt-3 space-y-2 text-sm text-white/70">
+                <li>Stress on "repeat" and "slowly".</li>
+                <li>Link "repeat that" smoothly.</li>
+                <li>Soften the "t" in "that".</li>
+              </ul>
+            </div>
+          </div>
+        );
+      case 'reading':
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Reading passage</p>
+              <p className="mt-2 text-white/90">"When the train finally arrived, the platform had gone quiet. Everyone leaned forward, eager to see where it would take them."</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
+                  Start reading
+                </button>
+                <button className="px-4 py-2 rounded-full text-sm text-white/60 border border-white/10 bg-white/5">
+                  Hear coach read
+                </button>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Reading goals</p>
+              <ul className="mt-3 space-y-2 text-sm text-white/70">
+                <li>Pause briefly after commas.</li>
+                <li>Lift intonation on "eager".</li>
+                <li>Keep a steady pace.</li>
+              </ul>
+            </div>
+          </div>
+        );
+      case 'speaking':
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Speaking prompt</p>
+              <p className="mt-2 text-white/90">Explain your weekend plans in under one minute. Include one detail about time and location.</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
+                  Begin speaking
+                </button>
+                <button className="px-4 py-2 rounded-full text-sm text-white/60 border border-white/10 bg-white/5">
+                  Practice outline
+                </button>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach notes</p>
+              <p className="mt-2 text-white/70 text-sm">Aim for 3-4 sentences. Focus on smooth linking words.</p>
+            </div>
+          </div>
+        );
+      case 'vocabulary':
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">New words</p>
+              <div className="mt-3 grid gap-3">
+                {['negotiate', 'improvise', 'persuade'].map((word) => (
+                  <div key={word} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                    <p className="text-white font-medium">{word}</p>
+                    <p className="text-white/60 text-sm">Use it in a sentence about today.</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Your sentence</p>
+              <input
+                className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/90 placeholder:text-white/30 focus:outline-none"
+                placeholder="Type one sentence using a new word..."
+              />
+            </div>
+          </div>
+        );
+      case 'grammar':
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Fix the sentence</p>
+              <p className="mt-2 text-white/90">"I am agree with you because it make sense."</p>
+              <input
+                className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/90 placeholder:text-white/30 focus:outline-none"
+                placeholder="Rewrite it correctly..."
+              />
+              <div className="mt-4">
+                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
+                  Check answer
+                </button>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach hint</p>
+              <p className="mt-2 text-white/70 text-sm">Drop "am" before adjectives like "agree".</p>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const activeModuleMeta = useMemo(() => {
+    if (!activeModule) return null;
+    return PRACTICE_MODULES[activeModule] || null;
+  }, [activeModule]);
+
+  if (isLoadingJob) {
     return (
       <MeshGradientBackground>
         <div className="min-h-screen flex items-center justify-center">
@@ -276,16 +499,16 @@ const ChatPage = () => {
 
   return (
     <MeshGradientBackground>
-      <div className="min-h-screen flex flex-col">
+      <div className="h-screen overflow-hidden flex flex-col">
         {/* Hidden audio element */}
         <audio ref={audioRef} />
-        
+
         {/* Header */}
         <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
           <nav className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                to="/sessions"
+                to="/jobs"
                 className="p-2 rounded-full transition-all hover:bg-white/10"
               >
                 <ArrowLeft className="w-5 h-5 text-white/70" />
@@ -295,172 +518,254 @@ const ChatPage = () => {
                 <span className="font-medium text-lg text-white hidden sm:block">mumble</span>
               </Link>
             </div>
-            
-            <div className="flex items-center gap-2">
-              {/* Chat History Link */}
-              {messages.length > 0 && (
-                <Link
-                  to={`/sessions/${sessionId}/history`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all hover:bg-white/10"
-                  style={{
-                    color: 'rgba(255, 255, 255, 0.5)',
-                  }}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="hidden sm:inline">History</span>
-                </Link>
-              )}
-              
-              <button
-                onClick={toggleMute}
-                className="p-2.5 rounded-full transition-all hover:bg-white/10"
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? (
-                  <VolumeX size={20} className="text-white/40" />
-                ) : (
-                  <Volume2 size={20} className="text-white/70" />
-                )}
-              </button>
-            </div>
           </nav>
         </header>
 
-        {/* Main Content - Landing Page Style */}
-        <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-32">
-          {/* Liquid Orb - Large size for chat page */}
-          <div className="mb-8">
-            <LiquidOrb isSpeaking={isSpeaking || isListening} size="large" />
-          </div>
-
-          {/* Response Display - Like Landing Page */}
-          <div className="text-center max-w-lg mx-auto mb-8 min-h-[80px]">
-            {isListening ? (
-              <p 
-                className="text-lg leading-relaxed animate-pulse"
-                style={{ color: 'rgba(143, 236, 120, 0.8)' }}
-              >
-                {chatInput || "Listening..."}
-              </p>
-            ) : currentResponse ? (
-              <p 
-                className="text-lg leading-relaxed"
-                style={{ color: 'rgba(255, 255, 255, 0.8)' }}
-              >
-                "{currentResponse}"
-              </p>
-            ) : isChatting ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            ) : (
-              <p className="text-white/40">
-                Start a conversation with Mia
-              </p>
-            )}
-          </div>
-
-          {/* Input Area */}
-          <div className="w-full max-w-lg">
-            <form onSubmit={handleChatSubmit} className="flex gap-3 items-center">
-              {/* Microphone Button - Full width when listening, small button when input focused */}
-              <button
-                type="button"
-                onClick={isListening ? handleVoiceSend : toggleListening}
-                disabled={isChatting}
-                className="h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 ease-out disabled:opacity-30 overflow-hidden flex-shrink-0"
-                style={{
-                  width: isListening ? 'calc(100% - 68px)' : '56px',
-                  flex: isListening ? '1 1 auto' : '0 0 56px',
-                  background: isListening 
-                    ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)'
-                    : 'rgba(255, 255, 255, 0.06)',
-                  border: isListening
-                    ? '1px solid rgba(143, 236, 120, 0.3)'
-                    : '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: isListening ? '0 0 40px rgba(143, 236, 120, 0.15)' : 'none',
-                }}
-                title={isListening ? 'Send voice message' : 'Start voice input'}
-              >
-                {isListening ? (
-                  <>
-                    <Mic size={20} className="text-[#8FEC78]" />
-                    <div className="flex items-center gap-1">
-                      <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1 h-5 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1 h-4 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
-                      <span className="w-1 h-6 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '100ms' }} />
-                      <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
-                    </div>
-                    <span className="text-[#8FEC78] text-sm font-medium ml-2">Tap to send</span>
-                    <Send size={18} className="text-[#8FEC78] ml-auto mr-2" />
-                  </>
-                ) : (
-                  <Mic size={20} className="text-white/50" />
+        {/* Main Content */}
+        <main className="flex-1 px-6 pt-24 pb-6 overflow-hidden">
+          <div className="max-w-5xl mx-auto flex flex-col gap-6 h-full">
+            <div className="space-y-4 overflow-y-auto pr-1 min-h-0 flex-1">
+              {messages.length === 0 && !isChatting && (
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-6 text-white/50">
+                    Your coach will guide you step-by-step and open practice modules as needed.
+                  </div>
                 )}
-              </button>
-              
-              {/* Text Input - Small button when listening, expands when focused */}
-              <div 
-                className="relative transition-all duration-500 ease-out"
-                style={{
-                  flex: isListening ? '0 0 56px' : '1 1 auto',
-                  width: isListening ? '56px' : 'auto',
-                }}
-              >
-                {isListening ? (
-                  // Show as a simple button when mic is active
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (recognitionRef.current) {
-                        recognitionRef.current.stop();
-                      }
-                      setIsListening(false);
-                    }}
-                    className="h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-300"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                    }}
-                  >
-                    <Send size={20} className="text-white/30" />
-                  </button>
-                ) : (
-                  // Normal input when not listening
-                  <>
-                    <Input
-                      type="text"
-                      placeholder="Type your message..."
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onFocus={() => setInputFocused(true)}
-                      onBlur={() => setInputFocused(false)}
-                      disabled={isChatting}
-                      className="h-14 pl-5 pr-14 rounded-2xl text-white placeholder:text-white/25 transition-all duration-300 border-0 focus-visible:ring-1 focus-visible:ring-[#8FEC78]/50"
+
+                {messages.map((msg, idx) => {
+                  const practiceType = msg.role === 'assistant' && !msg.isSubagent
+                    ? detectPracticeModule(msg.content)
+                    : null;
+                  const moduleMeta = practiceType ? PRACTICE_MODULES[practiceType] : null;
+                  const ModuleIcon = moduleMeta?.icon || Sparkles;
+
+                  if (msg.role === 'user') {
+                    return (
+                      <div key={idx} className="flex justify-end">
+                        <div className="max-w-[80%] rounded-2xl bg-[#163c27] border border-[#8FEC78]/30 px-4 py-3 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+                          <p className="text-sm uppercase tracking-[0.2em] text-white/40">You</p>
+                          <p className="mt-2 text-base leading-relaxed">{msg.content}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (msg.role === 'tool') {
+                    return (
+                      <div key={idx} className="flex justify-center">
+                        <div className="w-full rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 via-white/10 to-white/5 px-4 py-3 text-white/80">
+                          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach tool</p>
+                          <p className="mt-2 text-sm">{msg.content}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (msg.isSubagent) {
+                    return (
+                      <div key={idx} className="flex justify-start">
+                          <div className="w-full rounded-2xl border border-[#8FEC78]/25 bg-[#0f261a] px-4 py-4 text-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.25em] text-[#8FEC78]/80">Coach feedback</p>
+                              <p className="text-lg font-semibold text-white mt-1">{msg.agentName || 'Specialist'}</p>
+                            </div>
+                          </div>
+                          <p className="mt-3 text-sm leading-relaxed text-white/80">{msg.content}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={idx} className="space-y-3">
+                      <div className="flex justify-start">
+                        <div className="w-full rounded-2xl border border-white/10 bg-[#12151a] px-4 py-3 text-white">
+                          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Main coach</p>
+                          <p className="mt-2 text-base leading-relaxed">{msg.content}</p>
+                        </div>
+                      </div>
+                      {moduleMeta && (
+                        <div className="flex justify-start">
+                          <div className="w-full rounded-2xl border border-white/10 bg-[#161b22] px-4 py-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-2xl border border-white/10 bg-black/30 flex items-center justify-center text-white/70">
+                                  <ModuleIcon size={18} />
+                                </div>
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.2em] text-white/40">Practice module</p>
+                                  <p className="text-lg font-semibold text-white mt-1">{moduleMeta.name}</p>
+                                  <p className="text-xs text-white/50 mt-1">{moduleMeta.focus}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setActiveModule(moduleMeta.type)}
+                                className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10 hover:bg-[#8FEC78]/20 transition"
+                              >
+                                Open practice
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {isChatting && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <div className="px-1 py-2">
+              <form onSubmit={handleChatSubmit} className="flex gap-3 items-center">
+                <button
+                  type="button"
+                  onClick={isListening ? handleVoiceSend : toggleListening}
+                  disabled={isChatting}
+                  className="h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 ease-out disabled:opacity-30 overflow-hidden flex-shrink-0"
+                  style={{
+                    width: isListening ? 'calc(100% - 68px)' : '56px',
+                    flex: isListening ? '1 1 auto' : '0 0 56px',
+                    background: isListening
+                      ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)'
+                      : 'rgba(255, 255, 255, 0.06)',
+                    border: isListening
+                      ? '1px solid rgba(143, 236, 120, 0.3)'
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: isListening ? '0 0 40px rgba(143, 236, 120, 0.15)' : 'none',
+                  }}
+                  title={isListening ? 'Send voice message' : 'Start voice input'}
+                >
+                  {isListening ? (
+                    <>
+                      <Mic size={20} className="text-[#8FEC78]" />
+                      <div className="flex items-center gap-1">
+                        <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1 h-5 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1 h-4 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                        <span className="w-1 h-6 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '100ms' }} />
+                        <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
+                      </div>
+                      <span className="text-[#8FEC78] text-sm font-medium ml-2">Tap to send</span>
+                      <Send size={18} className="text-[#8FEC78] ml-auto mr-2" />
+                    </>
+                  ) : (
+                    <Mic size={20} className="text-white/50" />
+                  )}
+                </button>
+
+                <div
+                  className="relative transition-all duration-500 ease-out"
+                  style={{
+                    flex: isListening ? '0 0 56px' : '1 1 auto',
+                    width: isListening ? '56px' : 'auto',
+                  }}
+                >
+                  {isListening ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (recognitionRef.current) {
+                          recognitionRef.current.stop();
+                        }
+                        setIsListening(false);
+                      }}
+                      className="h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-300"
                       style={{
                         background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
-                    />
-                    <button
-                      type="submit"
-                      disabled={isChatting || !chatInput.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all hover:bg-white/10 disabled:opacity-30"
                     >
-                      {isChatting ? (
-                        <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
-                      ) : (
-                        <Send size={20} className="text-white/50" />
-                      )}
+                      <Send size={20} className="text-white/30" />
                     </button>
-                  </>
-                )}
-              </div>
-            </form>
+                  ) : (
+                    <>
+                      <Input
+                        type="text"
+                        placeholder="Type your message..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        disabled={isChatting}
+                        className="h-14 pl-5 pr-14 rounded-2xl text-white placeholder:text-white/25 transition-all duration-300 border-0 focus-visible:ring-1 focus-visible:ring-[#8FEC78]/50"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.06)',
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={isChatting || !chatInput.trim()}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all hover:bg-white/10 disabled:opacity-30"
+                      >
+                        {isChatting ? (
+                          <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
+                        ) : (
+                          <Send size={20} className="text-white/50" />
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </form>
+            </div>
           </div>
         </main>
+
+        {activeModuleMeta && (
+          <div className="fixed inset-0 z-[60] flex items-start justify-center px-6 py-16">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setActiveModule(null)}
+            />
+            <div className="relative w-full max-w-4xl rounded-[32px] border border-white/10 bg-[#0b0b0b]/80 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+              <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#8FEC78]/80">Practice module</p>
+                  <h3 className="text-2xl font-semibold text-white mt-2">{activeModuleMeta.name}</h3>
+                  <p className="text-sm text-white/60 mt-1">{activeModuleMeta.focus}</p>
+                </div>
+                <button
+                  onClick={() => setActiveModule(null)}
+                  className="h-10 w-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/60 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="p-6 grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
+                <div>
+                  {renderPracticeModule(activeModuleMeta)}
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">Coach intent</p>
+                    <p className="mt-2 text-white/80 text-sm">This module appears when your tutor decides it is the right next step.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-sm text-white/70">After you finish</p>
+                    <div className="mt-3 space-y-2 text-sm text-white/80">
+                      <p>We will highlight your strengths.</p>
+                      <p>We will track what to revisit later.</p>
+                      <p>The main coach resumes the conversation.</p>
+                    </div>
+                  </div>
+                  <button className="w-full px-4 py-3 rounded-2xl bg-[#8FEC78]/15 border border-[#8FEC78]/30 text-[#8FEC78] text-sm">
+                    Mark as complete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MeshGradientBackground>
   );
