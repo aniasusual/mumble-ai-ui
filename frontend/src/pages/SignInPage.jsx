@@ -29,7 +29,7 @@ const SignInPage = () => {
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      navigate('/sessions');
+      navigate('/jobs');
     } catch (error) {
       const message = error.response?.data?.detail || 'Failed to sign in';
       toast.error(message);

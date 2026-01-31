@@ -22,19 +22,19 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ChatPage = () => {
-  const { sessionId } = useParams();
+  const { jobId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // Session data
-  const [session, setSession] = useState(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  // Job data
+  const [job, setJob] = useState(null);
+  const [isLoadingJob, setIsLoadingJob] = useState(true);
   
   // Chat states
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
-  const [agentSessionId, setAgentSessionId] = useState(null);
+  const [agentJobId, setAgentJobId] = useState(null);
   
   // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -48,51 +48,49 @@ const ChatPage = () => {
   const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
 
-  // Fetch session data
+  // Fetch job data
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchJob = async () => {
       try {
-        const response = await axios.get(`${API}/sessions/${sessionId}`);
-        setSession(response.data);
+        const response = await axios.get(`${API}/jobs/${jobId}`);
+        setJob(response.data);
 
-        // Restore AgentOS session ID if it exists
-        if (response.data.agent_session_id) {
-          setAgentSessionId(response.data.agent_session_id);
-        }
+        // Restore AgentOS job ID if it exists (fallback to jobId)
+        setAgentJobId(response.data.agent_job_id || jobId);
 
         // Load existing chat history if available
         if (response.data.chat_history) {
           setMessages(response.data.chat_history);
         }
       } catch (error) {
-        console.error('Failed to fetch session:', error);
-        toast.error('Session not found');
-        navigate('/sessions');
+        console.error('Failed to fetch job:', error);
+        toast.error('Job not found');
+        navigate('/jobs');
       } finally {
-        setIsLoadingSession(false);
+        setIsLoadingJob(false);
       }
     };
 
-    fetchSession();
-  }, [sessionId, navigate]);
+    fetchJob();
+  }, [jobId, navigate]);
 
-  // Save chat history to session
-  const saveChatHistory = useCallback(async (newMessages, agentSessId = null) => {
+  // Save chat history to job
+  const saveChatHistory = useCallback(async (newMessages, agentIdOverride = null) => {
     try {
       const updateData = {
         chat_history: newMessages
       };
 
-      // Save AgentOS session ID if provided
-      if (agentSessId) {
-        updateData.agent_session_id = agentSessId;
+      // Save AgentOS job ID if provided
+      if (agentIdOverride) {
+        updateData.agent_job_id = agentIdOverride;
       }
 
-      await axios.put(`${API}/sessions/${sessionId}`, updateData);
+      await axios.put(`${API}/jobs/${jobId}`, updateData);
     } catch (error) {
       console.error('Failed to save chat history:', error);
     }
-  }, [sessionId]);
+  }, [jobId]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -157,17 +155,17 @@ const ChatPage = () => {
 
     try {
       // Call Main Agent through AgentOS with user context for base_language
-      const result = await sendMessageToAgent(message, agentSessionId, user);
+      const result = await sendMessageToAgent(message, agentJobId || jobId, user);
 
       if (!result.success) {
         throw new Error(result.error);
       }
 
-      // Store AgentOS session ID for continuity
-      let newAgentSessionId = agentSessionId;
-      if (result.sessionId && !agentSessionId) {
-        newAgentSessionId = result.sessionId;
-        setAgentSessionId(result.sessionId);
+      // Store AgentOS job ID for continuity
+      let newAgentJobId = agentJobId || jobId;
+      if (result.jobId && !agentJobId) {
+        newAgentJobId = result.jobId;
+        setAgentJobId(result.jobId);
       }
 
       let allNewMessages = [...updatedMessages];
@@ -195,8 +193,8 @@ const ChatPage = () => {
 
       setMessages(allNewMessages);
 
-      // Save to backend session storage (include agent session ID if it was just set)
-      saveChatHistory(allNewMessages, !agentSessionId && newAgentSessionId ? newAgentSessionId : null);
+      // Save to backend job storage (include agent job ID if it was just set)
+      saveChatHistory(allNewMessages, !agentJobId && newAgentJobId ? newAgentJobId : null);
 
     } catch (error) {
       console.error('Chat error:', error);
@@ -206,25 +204,25 @@ const ChatPage = () => {
     } finally {
       setIsChatting(false);
     }
-  }, [isChatting, agentSessionId, messages, saveChatHistory]);
+  }, [isChatting, agentJobId, jobId, messages, saveChatHistory]);
 
-  // Trigger intro message when session loads (only for new sessions)
+  // Trigger intro message when job loads (only for new jobs)
   useEffect(() => {
-    if (!session || introCalledRef.current || isLoadingSession) return;
+    if (!job || introCalledRef.current || isLoadingJob) return;
     
     // Only send intro if no chat history exists
-    if (session.chat_history && session.chat_history.length > 0) {
+    if (job.chat_history && job.chat_history.length > 0) {
       introCalledRef.current = true;
       return;
     }
     
     introCalledRef.current = true;
 
-    // New session - Agent introduces itself
+    // New job - Agent introduces itself
     const introMessage = "Hello! I'm your language learning coach.";
 
     sendMessage(introMessage, true);
-  }, [session, isLoadingSession, sendMessage]);
+  }, [job, isLoadingJob, sendMessage]);
 
   // Toggle mute
   const toggleMute = () => {
@@ -278,7 +276,7 @@ const ChatPage = () => {
     }
   };
 
-  if (isLoadingSession) {
+  if (isLoadingJob) {
     return (
       <MeshGradientBackground>
         <div className="min-h-screen flex items-center justify-center">
@@ -299,7 +297,7 @@ const ChatPage = () => {
           <nav className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                to="/sessions"
+                to="/jobs"
                 className="p-2 rounded-full transition-all hover:bg-white/10"
               >
                 <ArrowLeft className="w-5 h-5 text-white/70" />
@@ -314,7 +312,7 @@ const ChatPage = () => {
               {/* Chat History Link */}
               {messages.length > 0 && (
                 <Link
-                  to={`/sessions/${sessionId}/history`}
+                  to={`/jobs/${jobId}/history`}
                   className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all hover:bg-white/10"
                   style={{
                     color: 'rgba(255, 255, 255, 0.5)',

@@ -41,7 +41,7 @@ const SignUpPage = () => {
     try {
       await register(email, password, name);
       toast.success('Account created successfully!');
-      navigate('/sessions');
+      navigate('/jobs');
     } catch (error) {
       const message = error.response?.data?.detail || 'Failed to create account';
       toast.error(message);

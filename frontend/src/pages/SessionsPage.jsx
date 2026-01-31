@@ -59,11 +59,11 @@ const BASE_LANGUAGES = [
   { value: 'Korean', label: 'Korean', flag: '🇰🇷' },
 ];
 
-const SessionsPage = () => {
+const JobsPage = () => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
 
-  const [sessions, setSessions] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -73,17 +73,17 @@ const SessionsPage = () => {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [languageSearch, setLanguageSearch] = useState('');
   const [showRenameDialog, setShowRenameDialog] = useState(false);
-  const [renamingSession, setRenamingSession] = useState(null);
-  const [newSessionTitle, setNewSessionTitle] = useState('');
+  const [renamingJob, setRenamingJob] = useState(null);
+  const [newJobTitle, setNewJobTitle] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
-  // Fetch sessions
-  const fetchSessions = useCallback(async () => {
+  // Fetch jobs
+  const fetchJobs = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/sessions`);
-      setSessions(response.data);
+      const response = await axios.get(`${API}/jobs`);
+      setJobs(response.data);
     } catch (error) {
-      console.error('Failed to fetch sessions:', error);
+      console.error('Failed to fetch jobs:', error);
       if (error.response?.status === 401) {
         logout();
         navigate('/signin');
@@ -94,69 +94,69 @@ const SessionsPage = () => {
   }, [logout, navigate]);
 
   useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+    fetchJobs();
+  }, [fetchJobs]);
 
-  // Create new session instantly
-  const handleCreateSession = async () => {
+  // Create new job instantly
+  const handleCreateJob = async () => {
     if (isCreating) return;
     
     setIsCreating(true);
     
     try {
-      const response = await axios.post(`${API}/sessions`, {});
-      setSessions([response.data, ...sessions]);
-      navigate(`/sessions/${response.data.id}/chat`);
+      const response = await axios.post(`${API}/jobs`, {});
+      setJobs([response.data, ...jobs]);
+      navigate(`/jobs/${response.data.id}/chat`);
     } catch (error) {
-      toast.error('Failed to create session');
+      toast.error('Failed to create job');
       setIsCreating(false);
     }
   };
 
-  // Delete session
-  const handleDeleteSession = async (sessionId, e) => {
+  // Delete job
+  const handleDeleteJob = async (jobId, e) => {
     e.stopPropagation();
     try {
-      await axios.delete(`${API}/sessions/${sessionId}`);
-      setSessions(sessions.filter(s => s.id !== sessionId));
-      toast.success('Session deleted');
+      await axios.delete(`${API}/jobs/${jobId}`);
+      setJobs(jobs.filter(j => j.id !== jobId));
+      toast.success('Job deleted');
     } catch (error) {
-      toast.error('Failed to delete session');
+      toast.error('Failed to delete job');
     }
   };
 
   // Open rename dialog
-  const handleOpenRename = (session, e) => {
+  const handleOpenRename = (job, e) => {
     e.stopPropagation();
-    setRenamingSession(session);
-    setNewSessionTitle(session.title || 'New Session');
+    setRenamingJob(job);
+    setNewJobTitle(job.title || 'New Job');
     setShowRenameDialog(true);
   };
 
-  // Handle rename session
-  const handleRenameSession = async () => {
-    if (!renamingSession || !newSessionTitle.trim() || isRenaming) return;
+  // Handle rename job
+  const handleRenameJob = async () => {
+    if (!renamingJob || !newJobTitle.trim() || isRenaming) return;
 
     setIsRenaming(true);
 
     try {
-      await axios.put(`${API}/sessions/${renamingSession.id}`, {
-        title: newSessionTitle.trim()
+      await axios.put(`${API}/jobs/${renamingJob.id}`, {
+        title: newJobTitle.trim()
       });
 
       // Update local state
-      setSessions(sessions.map(s =>
-        s.id === renamingSession.id
-          ? { ...s, title: newSessionTitle.trim() }
-          : s
+      setJobs(jobs.map(j =>
+        j.id === renamingJob.id
+          ? { ...j, title: newJobTitle.trim() }
+          : j
       ));
 
-      toast.success('Session renamed');
+      toast.success('Job renamed');
       setShowRenameDialog(false);
-      setRenamingSession(null);
-      setNewSessionTitle('');
+      setRenamingJob(null);
+      setNewJobTitle('');
     } catch (error) {
-      toast.error('Failed to rename session');
+      toast.error('Failed to rename job');
     } finally {
       setIsRenaming(false);
     }
@@ -305,12 +305,12 @@ const SessionsPage = () => {
             {/* Page Header */}
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-2xl font-semibold text-white">
-                Sessions
+                Jobs
               </h1>
               
-              {/* Minimal New Session Button */}
+              {/* Minimal New Job Button */}
               <button
-                onClick={handleCreateSession}
+                onClick={handleCreateJob}
                 disabled={isCreating}
                 className="flex items-center gap-2 text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50"
                 style={{ color: '#8FEC78' }}
@@ -324,18 +324,18 @@ const SessionsPage = () => {
               </button>
             </div>
 
-            {/* Sessions Content */}
+            {/* Jobs Content */}
             {isLoading ? (
               <div className="flex items-center justify-center py-32">
                 <Loader2 className="w-6 h-6 text-white/30 animate-spin" />
               </div>
-            ) : sessions.length === 0 ? (
+            ) : jobs.length === 0 ? (
               /* Empty State */
               <div className="text-center py-20">
                 <BookOpen className="w-10 h-10 text-white/15 mx-auto mb-4" />
-                <p className="text-white/40 mb-6">No sessions yet</p>
+                <p className="text-white/40 mb-6">No jobs yet</p>
                 <button
-                  onClick={handleCreateSession}
+                  onClick={handleCreateJob}
                   disabled={isCreating}
                   className="text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50"
                   style={{ color: '#8FEC78' }}
@@ -348,32 +348,32 @@ const SessionsPage = () => {
                   ) : (
                     <span className="flex items-center gap-2">
                       <Plus className="w-4 h-4" />
-                      Create your first session
+                      Create your first job
                     </span>
                   )}
                 </button>
               </div>
             ) : (
-              /* Sessions List */
+              /* Jobs List */
               <div className="space-y-1">
-                {sessions.map((session) => {
-                  const language = session.language ? getLanguageInfo(session.language) : null;
+                {jobs.map((job) => {
+                  const language = job.language ? getLanguageInfo(job.language) : null;
                   return (
                     <div
-                      key={session.id}
+                      key={job.id}
                       className="group flex items-center justify-between py-4 px-4 -mx-4 rounded-xl cursor-pointer transition-all hover:bg-white/5"
                     >
                       <div 
                         className="min-w-0 flex-1"
-                        onClick={() => navigate(`/sessions/${session.id}/chat`)}
+                        onClick={() => navigate(`/jobs/${job.id}/chat`)}
                       >
-                        {/* Session Info */}
+                        {/* Job Info */}
                         <h3 className="text-white font-medium truncate">
-                          {session.title || 'New Session'}
+                          {job.title || 'New Job'}
                         </h3>
                         <p className="text-white/40 text-sm truncate">
                           {language ? language.label : 'Getting started'}
-                          {session.level && ` · ${session.level}`}
+                          {job.level && ` · ${job.level}`}
                         </p>
                       </div>
                       
@@ -381,18 +381,18 @@ const SessionsPage = () => {
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {/* Date - Hides on mobile and on desktop hover */}
                         <span className="text-white/25 text-sm hidden md:block group-hover:hidden">
-                          {formatDate(session.created_at)}
+                          {formatDate(job.created_at)}
                         </span>
 
                         {/* Rename Button - Shows on hover on desktop, always on mobile */}
                         <button
-                          onClick={(e) => handleOpenRename(session, e)}
+                          onClick={(e) => handleOpenRename(job, e)}
                           className="flex md:hidden md:group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all hover:bg-white/5"
                           style={{
                             color: 'rgba(255, 255, 255, 0.7)',
                             border: '1px solid rgba(255, 255, 255, 0.15)',
                           }}
-                          title="Rename session"
+                          title="Rename job"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                           <span className="hidden lg:inline">Rename</span>
@@ -400,13 +400,13 @@ const SessionsPage = () => {
 
                         {/* Delete Button - Always visible on mobile, shows on hover on desktop */}
                         <button
-                          onClick={(e) => handleDeleteSession(session.id, e)}
+                          onClick={(e) => handleDeleteJob(job.id, e)}
                           className="flex md:hidden md:group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all hover:bg-red-500/10"
                           style={{
                             color: 'rgba(239, 68, 68, 0.85)',
                             border: '1px solid rgba(239, 68, 68, 0.2)',
                           }}
-                          title="Delete session"
+                          title="Delete job"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span className="hidden lg:inline">Delete</span>
@@ -414,7 +414,7 @@ const SessionsPage = () => {
 
                         {/* Chevron - Clickable area */}
                         <div
-                          onClick={() => navigate(`/sessions/${session.id}/chat`)}
+                          onClick={() => navigate(`/jobs/${job.id}/chat`)}
                           className="flex items-center justify-center w-8 h-8 rounded-lg group-hover:bg-white/5 transition-all"
                         >
                           <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40" />
@@ -663,7 +663,7 @@ const SessionsPage = () => {
           </div>
         </SidePanel>
 
-        {/* Rename Session Dialog */}
+        {/* Rename Job Dialog */}
         <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
           <DialogContent
             className="rounded-2xl border-0 p-0 overflow-hidden"
@@ -679,25 +679,25 @@ const SessionsPage = () => {
           >
             <DialogHeader className="p-6 pb-4">
               <DialogTitle className="text-xl font-medium text-white">
-                Rename Session
+                Rename Job
               </DialogTitle>
             </DialogHeader>
 
             <div className="px-6 pb-6">
               <div className="space-y-4">
-                {/* Session Title Input */}
+                {/* Job Title Input */}
                 <div>
                   <label className="text-sm font-medium mb-2 block" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    Session Title
+                    Job Title
                   </label>
                   <input
                     type="text"
-                    value={newSessionTitle}
-                    onChange={(e) => setNewSessionTitle(e.target.value)}
+                    value={newJobTitle}
+                    onChange={(e) => setNewJobTitle(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleRenameSession();
+                        handleRenameJob();
                       }
                     }}
                     className="w-full h-12 px-4 rounded-lg text-sm outline-none transition-all"
@@ -712,7 +712,7 @@ const SessionsPage = () => {
                     onBlur={(e) => {
                       e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                     }}
-                    placeholder="Enter session title..."
+                    placeholder="Enter job title..."
                     autoFocus
                   />
                 </div>
@@ -722,8 +722,8 @@ const SessionsPage = () => {
                   <button
                     onClick={() => {
                       setShowRenameDialog(false);
-                      setRenamingSession(null);
-                      setNewSessionTitle('');
+                      setRenamingJob(null);
+                      setNewJobTitle('');
                     }}
                     className="flex-1 h-11 rounded-lg text-sm font-normal transition-all"
                     style={{
@@ -741,8 +741,8 @@ const SessionsPage = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={handleRenameSession}
-                    disabled={isRenaming || !newSessionTitle.trim()}
+                    onClick={handleRenameJob}
+                    disabled={isRenaming || !newJobTitle.trim()}
                     className="flex-1 h-11 rounded-lg text-sm font-normal transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     style={{
                       background: 'transparent',
@@ -750,7 +750,7 @@ const SessionsPage = () => {
                       border: '1px solid rgba(143, 236, 120, 0.3)',
                     }}
                     onMouseEnter={(e) => {
-                      if (!isRenaming && newSessionTitle.trim()) {
+                      if (!isRenaming && newJobTitle.trim()) {
                         e.currentTarget.style.background = 'rgba(143, 236, 120, 0.08)';
                         e.currentTarget.style.borderColor = 'rgba(143, 236, 120, 0.4)';
                       }
@@ -779,4 +779,4 @@ const SessionsPage = () => {
   );
 };
 
-export default SessionsPage;
+export default JobsPage;
