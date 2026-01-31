@@ -44,19 +44,17 @@ const SidePanel = ({ isOpen, onClose, children, title, width = "420px" }) => {
           bottom: "16px",
           width: "calc(100% - 32px)",
           maxWidth: width,
-          background: "transparent",
+          background: "#0f1115",
           opacity: 1,
-          backdropFilter: "blur(50px) saturate(180%)",
-          WebkitBackdropFilter: "blur(50px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.08)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.6)",
           animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
         {/* Header - Minimal */}
         <div
           className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
-          style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
+          style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}
         >
           <h2 className="text-lg font-medium text-white">{title}</h2>
           <button
