@@ -1,12 +1,8 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* Enhanced App Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Ensure app doesn't center align text */
+.App {
+    min-height: 100vh;
 }
 
 .App-header {
@@ -22,18 +18,41 @@
 
 .App-link {
     color: #61dafb;
+    transition: color 0.3s ease;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.App-link:hover {
+    color: #8FEC78;
 }
 
-/* Ensure app doesn't center align text */
-.App {
-    min-height: 100vh;
+/* Enhanced button styles */
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Better link styles */
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease;
+}
+
+a:hover {
+    opacity: 0.85;
+}
+
+/* Enhanced form elements */
+input, textarea, select {
+    font-family: inherit;
+}
+
+/* Smooth transitions for all interactive elements */
+button, a, input, textarea, select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

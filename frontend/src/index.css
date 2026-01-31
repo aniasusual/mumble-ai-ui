@@ -3,24 +3,32 @@
 @tailwind utilities;
 
 :root {
-  /* Dark Theme - Minimalistic Black */
+  /* Dark Theme - Enhanced Minimalistic Black */
   --bg-page: #000000;
   --bg-card: #0a0a0a;
-  --bg-section: rgba(255, 255, 255, 0.02);
+  --bg-section: rgba(255, 255, 255, 0.03);
   
-  /* Text - Clean Hierarchy */
+  /* Text - Enhanced Hierarchy */
   --text-primary: #ffffff;
-  --text-body: rgba(255, 255, 255, 0.9);
-  --text-secondary: rgba(255, 255, 255, 0.5);
-  --text-muted: rgba(255, 255, 255, 0.3);
+  --text-body: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.35);
   
-  /* Borders */
-  --border-light: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
+  /* Borders - More refined */
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.18);
+  --border-focus: rgba(143, 236, 120, 0.4);
   
-  /* Accent - Subtle green glow */
+  /* Accent - Enhanced green with better variations */
   --accent-primary: #8FEC78;
-  --accent-glow: rgba(143, 236, 120, 0.15);
+  --accent-hover: #a5f08f;
+  --accent-glow: rgba(143, 236, 120, 0.2);
+  --accent-glow-strong: rgba(143, 236, 120, 0.3);
+  
+  /* Glass effects */
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-hover: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.12);
   
   /* Orb colors */
   --orb-green: #8FEC78;
@@ -46,7 +54,7 @@
   --border: 0 0% 15%;
   --input: 0 0% 15%;
   --ring: 0 0% 100%;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 * {
@@ -60,6 +68,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: var(--bg-page);
   color: var(--text-body);
+  letter-spacing: -0.01em;
 }
 
 code {
@@ -200,10 +209,16 @@ code {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Focus styles */
-input:focus {
+/* Focus styles - Enhanced */
+input:focus,
+textarea:focus,
+button:focus {
   outline: none;
-  border-color: rgba(143, 236, 120, 0.5) !important;
+}
+
+input:focus-visible {
+  border-color: var(--border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(143, 236, 120, 0.1) !important;
 }
 
 /* Hide scrollbar but keep functionality */
@@ -226,3 +241,192 @@ input:focus {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Utility Classes for Enhanced Styling */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--border-medium);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, rgba(143, 236, 120, 0.2) 0%, rgba(90, 201, 75, 0.2) 100%);
+  color: var(--accent-primary);
+  border: 1px solid rgba(143, 236, 120, 0.4);
+  box-shadow: 0 0 30px var(--accent-glow), inset 0 0 20px rgba(143, 236, 120, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(143, 236, 120, 0.25) 0%, rgba(90, 201, 75, 0.25) 100%);
+  box-shadow: 0 0 40px var(--accent-glow-strong), inset 0 0 25px rgba(143, 236, 120, 0.12);
+  transform: translateY(-1px);
+  border-color: rgba(143, 236, 120, 0.5);
+}
+
+.btn-secondary {
+  background: var(--glass-bg);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: var(--border-medium);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.input-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-glass:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-medium);
+}
+
+.input-glass:focus {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(143, 236, 120, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced scrolling for command lists and dropdowns */
+[cmdk-list] {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  will-change: scroll-position;
+}
+
+/* Ensure proper pointer events for scrollable areas */
+[cmdk-list]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[cmdk-list]::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+[cmdk-list]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+}
+
+[cmdk-list]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Firefox scrollbar styling */
+[cmdk-list] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced menu item hover effects */
+[role="menuitem"]:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[role="menuitem"][data-destructive="true"]:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #EF4444 !important;
+}
+
+/* Command item hover effects */
+[cmdk-item][data-selected="true"] {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[cmdk-item]:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Custom Dropdown Animations */
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.language-dropdown-panel {
+  animation: dropdownSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom scrollbar for language dropdown */
+.language-dropdown-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.language-dropdown-panel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.language-dropdown-panel::-webkit-scrollbar-thumb {
+  background: rgba(143, 236, 120, 0.3);
+  border-radius: 4px;
+}
+
+.language-dropdown-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(143, 236, 120, 0.5);
+}
+
+
+
+
+

@@ -1,5 +1,3 @@
-import React from 'react';
-
 const MeshGradientBackground = ({ children }) => {
   return (
     <div className="relative min-h-screen overflow-hidden bg-black">
