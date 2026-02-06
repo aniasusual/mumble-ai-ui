@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { sendMessageToAgent } from '../services/agentService';
+import { ConversationAgentPanel, ConversationInviteCard } from '../components/subagents';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -69,9 +70,29 @@ const detectPracticeModule = (text) => {
   if (lowered.includes('pronunciation') || lowered.includes('pronounce')) return 'pronunciation';
   if (lowered.includes('writing') || lowered.includes('write')) return 'writing';
   if (lowered.includes('reading') || lowered.includes('read')) return 'reading';
-  if (lowered.includes('speaking') || lowered.includes('conversation') || lowered.includes('talk')) return 'speaking';
   if (lowered.includes('vocabulary') || lowered.includes('vocab') || lowered.includes('word')) return 'vocabulary';
   if (lowered.includes('grammar')) return 'grammar';
+  return null;
+};
+
+// Detect if main agent wants to start conversation practice
+const detectConversationInvite = (text) => {
+  if (!text) return null;
+  const lowered = text.toLowerCase();
+  // Look for conversation practice triggers
+  if (
+    (lowered.includes('conversation') && (lowered.includes('practice') || lowered.includes('let\'s'))) ||
+    (lowered.includes('speaking') && lowered.includes('practice')) ||
+    lowered.includes('free conversation') ||
+    lowered.includes('let\'s talk') ||
+    lowered.includes('start a conversation') ||
+    lowered.includes('practice speaking')
+  ) {
+    return {
+      topic: 'Free conversation practice',
+      description: 'Practice natural conversation with real-time voice interaction',
+    };
+  }
   return null;
 };
 
@@ -103,6 +124,10 @@ const ChatPage = () => {
   const chatEndRef = useRef(null);
 
   const [activeModule, setActiveModule] = useState(null);
+  
+  // Conversation agent state
+  const [isConversationPanelOpen, setIsConversationPanelOpen] = useState(false);
+  const [conversationContext, setConversationContext] = useState({});
 
   // Fetch job data
   useEffect(() => {
@@ -537,13 +562,18 @@ const ChatPage = () => {
                     : null;
                   const moduleMeta = practiceType ? PRACTICE_MODULES[practiceType] : null;
                   const ModuleIcon = moduleMeta?.icon || Sparkles;
+                  
+                  // Check for conversation practice invite
+                  const conversationInvite = msg.role === 'assistant' && !msg.isSubagent
+                    ? detectConversationInvite(msg.content)
+                    : null;
 
                   if (msg.role === 'user') {
                     return (
                       <div key={idx} className="flex justify-end">
-                        <div className="max-w-[80%] rounded-2xl bg-[#163c27] border border-[#8FEC78]/30 px-4 py-3 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-                          <p className="text-sm uppercase tracking-[0.2em] text-white/40">You</p>
-                          <p className="mt-2 text-base leading-relaxed">{msg.content}</p>
+                        <div className="max-w-[80%] rounded-2xl bg-[#1e3a5f] px-4 py-3 text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                          <p className="text-sm uppercase tracking-[0.2em] text-[#60a5fa]">You</p>
+                          <p className="mt-2 text-base leading-relaxed text-white">{msg.content}</p>
                         </div>
                       </div>
                     );
@@ -552,9 +582,9 @@ const ChatPage = () => {
                   if (msg.role === 'tool') {
                     return (
                       <div key={idx} className="flex justify-center">
-                        <div className="w-full rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 via-white/10 to-white/5 px-4 py-3 text-white/80">
-                          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach tool</p>
-                          <p className="mt-2 text-sm">{msg.content}</p>
+                        <div className="w-full rounded-2xl bg-[#1f2937] px-4 py-3">
+                          <p className="text-xs uppercase tracking-[0.2em] text-[#9ca3af]">Coach tool</p>
+                          <p className="mt-2 text-sm text-[#d1d5db]">{msg.content}</p>
                         </div>
                       </div>
                     );
@@ -563,14 +593,14 @@ const ChatPage = () => {
                   if (msg.isSubagent) {
                     return (
                       <div key={idx} className="flex justify-start">
-                          <div className="w-full rounded-2xl border border-[#8FEC78]/25 bg-[#0f261a] px-4 py-4 text-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+                        <div className="w-full rounded-2xl bg-[#831843] px-4 py-4 text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
                           <div className="flex items-center justify-between gap-4">
                             <div>
-                              <p className="text-xs uppercase tracking-[0.25em] text-[#8FEC78]/80">Coach feedback</p>
+                              <p className="text-xs uppercase tracking-[0.25em] text-[#f9a8d4]">Specialist feedback</p>
                               <p className="text-lg font-semibold text-white mt-1">{msg.agentName || 'Specialist'}</p>
                             </div>
                           </div>
-                          <p className="mt-3 text-sm leading-relaxed text-white/80">{msg.content}</p>
+                          <p className="mt-3 text-sm leading-relaxed text-[#fce7f3]">{msg.content}</p>
                         </div>
                       </div>
                     );
@@ -579,12 +609,31 @@ const ChatPage = () => {
                   return (
                     <div key={idx} className="space-y-3">
                       <div className="flex justify-start">
-                        <div className="w-full rounded-2xl border border-white/10 bg-[#12151a] px-4 py-3 text-white">
-                          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Main coach</p>
-                          <p className="mt-2 text-base leading-relaxed">{msg.content}</p>
+                        <div className="w-full px-1 py-2">
+                          <p className="text-base leading-relaxed text-white/90">{msg.content}</p>
                         </div>
                       </div>
-                      {moduleMeta && (
+                      
+                      {/* Conversation Practice Invite */}
+                      {conversationInvite && (
+                        <ConversationInviteCard
+                          topic={conversationInvite.topic}
+                          description={conversationInvite.description}
+                          targetLanguage={user?.target_language}
+                          level={user?.level}
+                          onClick={() => {
+                            setConversationContext({
+                              topic: conversationInvite.topic,
+                              targetLanguage: user?.target_language,
+                              level: user?.level,
+                            });
+                            setIsConversationPanelOpen(true);
+                          }}
+                        />
+                      )}
+                      
+                      {/* Other practice modules */}
+                      {moduleMeta && !conversationInvite && (
                         <div className="flex justify-start">
                           <div className="w-full rounded-2xl border border-white/10 bg-[#161b22] px-4 py-4">
                             <div className="flex items-start justify-between gap-4">
@@ -766,6 +815,15 @@ const ChatPage = () => {
             </div>
           </div>
         )}
+        
+        {/* Conversation Agent Panel */}
+        <ConversationAgentPanel
+          isOpen={isConversationPanelOpen}
+          onClose={() => setIsConversationPanelOpen(false)}
+          jobId={agentJobId || jobId}
+          user={user}
+          context={conversationContext}
+        />
       </div>
     </MeshGradientBackground>
   );
