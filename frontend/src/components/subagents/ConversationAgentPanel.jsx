@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import LiquidOrb from '../LiquidOrb';
 import MumbleLogo from '../MumbleLogo';
-import { X, Mic, MicOff, PhoneOff, Loader2 } from 'lucide-react';
+import { X, Mic, MicOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   createConversationRealtimeSession,
@@ -117,6 +117,10 @@ const ConversationAgentPanel = ({
           noiseSuppression: true,
           sampleRate: 24000,
         },
+      });
+      // Start muted; user explicitly enables mic
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = false;
       });
       streamRef.current = stream;
       return true;
@@ -274,7 +278,7 @@ const ConversationAgentPanel = ({
     try {
       await setupRealtimeConnection();
       setIsProcessing(false);
-      setIsRecording(true);
+      setIsRecording(false);
     } catch (error) {
       console.error('Realtime connection error:', error);
       toast.error('Failed to establish realtime connection');
@@ -297,13 +301,26 @@ const ConversationAgentPanel = ({
   // Toggle mic (mute/unmute)
   const toggleRecording = useCallback(() => {
     const stream = streamRef.current;
-    if (!stream) return;
+    if (!stream) {
+      toast.error('Microphone is not ready yet.');
+      return;
+    }
 
     const nextEnabled = !isRecording;
     stream.getAudioTracks().forEach((track) => {
       track.enabled = nextEnabled;
     });
     setIsRecording(nextEnabled);
+
+    if (!nextEnabled) {
+      // User finished speaking; request a response
+      sendRealtimeEvent({
+        type: 'response.create',
+        response: {
+          modalities: ['audio', 'text'],
+        },
+      });
+    }
   }, [isRecording]);
 
   // End conversation
@@ -405,7 +422,7 @@ const ConversationAgentPanel = ({
                 {isRecording ? (
                   <>
                     <Mic size={14} className="text-[#8FEC78]" />
-                    <span className="text-xs text-[#8FEC78]">Mic On</span>
+                    <span className="text-xs text-[#8FEC78]">Listening...</span>
                   </>
                 ) : isSpeaking ? (
                   <>
@@ -452,7 +469,7 @@ const ConversationAgentPanel = ({
         <div className="flex items-center gap-4">
           <button
             onClick={toggleRecording}
-            disabled={isProcessing || !isActive}
+            disabled={!isActive}
             className="h-16 w-16 rounded-full flex items-center justify-center transition-all disabled:opacity-50"
             style={{
               background: isRecording ? 'rgba(239, 68, 68, 0.2)' : 'rgba(143, 236, 120, 0.2)',
@@ -467,17 +484,6 @@ const ConversationAgentPanel = ({
             )}
           </button>
 
-          <button
-            onClick={handleClose}
-            className="flex items-center gap-3 px-6 py-3 rounded-full transition-all hover:bg-red-500/20"
-            style={{
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-            }}
-          >
-            <PhoneOff size={18} className="text-red-400" />
-            <span className="text-red-400 text-sm font-medium">End</span>
-          </button>
         </div>
       </main>
 
