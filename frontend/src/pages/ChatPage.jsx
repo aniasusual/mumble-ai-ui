@@ -3,8 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import MeshGradientBackground from '../components/MeshGradientBackground';
 import MumbleLogo from '../components/MumbleLogo';
 import { useAuth } from '../context/AuthContext';
-import { Input } from '../components/ui/input';
-import { ArrowLeft, Send, Mic, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import {
@@ -13,6 +12,7 @@ import {
   getAgentJobHistory,
 } from '../services/agentService';
 import { RunActivityBox, SubagentInteractionPanel } from '../components/chat';
+import VoiceInput from '../components/chat/VoiceInput';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`
@@ -37,16 +37,12 @@ const ChatPage = () => {
   // Audio states
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Voice input states
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
   const [expandedRunEvents, setExpandedRunEvents] = useState({});
   const [activeSubagent, setActiveSubagent] = useState(null);
   const [subagentSessions, setSubagentSessions] = useState({});
   const [isSubagentSending, setIsSubagentSending] = useState(false);
 
   const audioRef = useRef(null);
-  const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
   const chatEndRef = useRef(null);
   const chatItemsRef = useRef([]);
@@ -240,51 +236,6 @@ const ChatPage = () => {
     }
   }, [activeSubagent, getSubagentKey, updateSubagentSession]);
 
-  // Initialize speech recognition
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (SpeechRecognition) {
-      setSpeechSupported(true);
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join('');
-
-        setChatInput(transcript);
-
-        if (event.results[0].isFinal) {
-          setIsListening(false);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-        if (event.error === 'not-allowed') {
-          toast.error('Microphone access denied');
-        }
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
-
   // Send message to Main Agent
   const sendMessage = useCallback(async (message, isIntro = false) => {
     if (!message.trim() || isChatting) return;
@@ -359,7 +310,27 @@ const ChatPage = () => {
           const isMemberResponse =
             (data.team_id && data.agent_id && data.agent_id !== data.team_id) ||
             (data.agent_id && data.agent_id !== 'mumble-ai-coach');
-          if (isMemberResponse) return;
+
+          if (isMemberResponse) {
+            const memberKey = data.agent_id || data.agent_name || data.run_id;
+            if (memberKey) {
+              updateSubagentSession(memberKey, (current) => {
+                if (current.length === 0) {
+                  return [{ role: 'assistant', content: chunk }];
+                }
+                const next = [...current];
+                const lastIndex = next.length - 1;
+                const last = next[lastIndex];
+                if (last?.role === 'assistant') {
+                  next[lastIndex] = { ...last, content: `${last.content || ''}${chunk}` };
+                  return next;
+                }
+                return [...next, { role: 'assistant', content: chunk }];
+              });
+            }
+            return;
+          }
+
           setChatItemsState((prev) => {
             if (assistantIndexRef.current === null || !prev[assistantIndexRef.current]) return prev;
             const next = [...prev];
@@ -558,46 +529,9 @@ const ChatPage = () => {
     chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [chatItems, isChatting]);
 
-  // Toggle voice input
-  const toggleListening = () => {
-    if (!speechSupported) {
-      toast.error('Voice input not supported in this browser');
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      if (audioRef.current && !audioRef.current.paused) {
-        audioRef.current.pause();
-        setIsSpeaking(false);
-      }
-
-      setChatInput('');
-      setIsListening(true);
-
-      try {
-        recognitionRef.current?.start();
-      } catch (e) {
-        console.error('Failed to start recognition:', e);
-        setIsListening(false);
-      }
-    }
-  };
-
-  // Handle voice send
-  const handleVoiceSend = () => {
-    if (chatInput.trim() && !isChatting) {
-      sendMessage(chatInput);
-    }
-  };
-
-  // Handle chat submit
-  const handleChatSubmit = (e) => {
-    e.preventDefault();
-    if (chatInput.trim()) {
-      sendMessage(chatInput);
+  const handleChatSubmit = (message) => {
+    if (message.trim()) {
+      sendMessage(message);
     }
   };
 
@@ -690,95 +624,20 @@ const ChatPage = () => {
 
             {/* Input Area */}
             <div className="px-1 py-2">
-              <form onSubmit={handleChatSubmit} className="flex gap-3 items-center">
-                <button
-                  type="button"
-                  onClick={isListening ? handleVoiceSend : toggleListening}
-                  disabled={isChatting}
-                  className="h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 ease-out disabled:opacity-30 overflow-hidden flex-shrink-0"
-                  style={{
-                    width: isListening ? 'calc(100% - 68px)' : '56px',
-                    flex: isListening ? '1 1 auto' : '0 0 56px',
-                    background: isListening
-                      ? 'linear-gradient(135deg, rgba(143, 236, 120, 0.15) 0%, rgba(90, 201, 75, 0.15) 100%)'
-                      : 'rgba(255, 255, 255, 0.06)',
-                    border: isListening
-                      ? '1px solid rgba(143, 236, 120, 0.3)'
-                      : '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: isListening ? '0 0 40px rgba(143, 236, 120, 0.15)' : 'none',
-                  }}
-                  title={isListening ? 'Send voice message' : 'Start voice input'}
-                >
-                  {isListening ? (
-                    <>
-                      <Mic size={20} className="text-[#8FEC78]" />
-                      <div className="flex items-center gap-1">
-                        <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1 h-5 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1 h-4 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
-                        <span className="w-1 h-6 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '100ms' }} />
-                        <span className="w-1 h-3 bg-[#8FEC78] rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
-                      </div>
-                      <span className="text-[#8FEC78] text-sm font-medium ml-2">Tap to send</span>
-                      <Send size={18} className="text-[#8FEC78] ml-auto mr-2" />
-                    </>
-                  ) : (
-                    <Mic size={20} className="text-white/50" />
-                  )}
-                </button>
-
-                <div
-                  className="relative transition-all duration-500 ease-out"
-                  style={{
-                    flex: isListening ? '0 0 56px' : '1 1 auto',
-                    width: isListening ? '56px' : 'auto',
-                  }}
-                >
-                  {isListening ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (recognitionRef.current) {
-                          recognitionRef.current.stop();
-                        }
-                        setIsListening(false);
-                      }}
-                      className="h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-300"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                      }}
-                    >
-                      <Send size={20} className="text-white/30" />
-                    </button>
-                  ) : (
-                    <>
-                      <Input
-                        type="text"
-                        placeholder="Type your message..."
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        disabled={isChatting}
-                        className="h-14 pl-5 pr-14 rounded-2xl text-white placeholder:text-white/25 transition-all duration-300 border-0 focus-visible:ring-1 focus-visible:ring-[#8FEC78]/50"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.06)',
-                        }}
-                      />
-                      <button
-                        type="submit"
-                        disabled={isChatting || !chatInput.trim()}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all hover:bg-white/10 disabled:opacity-30"
-                      >
-                        {isChatting ? (
-                          <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
-                        ) : (
-                          <Send size={20} className="text-white/50" />
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </form>
+              <VoiceInput
+                value={chatInput}
+                onChange={setChatInput}
+                onSubmit={handleChatSubmit}
+                disabled={isChatting}
+                placeholder="Type your message..."
+                variant="main"
+                onStartListening={() => {
+                  if (audioRef.current && !audioRef.current.paused) {
+                    audioRef.current.pause();
+                    setIsSpeaking(false);
+                  }
+                }}
+              />
             </div>
 
             <SubagentInteractionPanel
