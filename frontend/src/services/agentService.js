@@ -5,68 +5,6 @@ const AGENT_ID = 'mumble-ai-coach';
 const CONVERSATION_AGENT_ID = 'conversation-agent';
 
 /**
- * Send message to Main Agent (orchestrator)
- * @param {string} message - User message
- * @param {string} jobId - Optional job identifier (mapped to AgentOS session_id)
- * @param {object} user - User object with base_language
- * @returns {Promise} Response from agent
- */
-export const sendMessageToAgent = async (message, jobId = null, user = null) => {
-  try {
-    const formData = new FormData();
-    formData.append('message', message);
-    formData.append('stream', 'false');
-    formData.append('monitor', 'true');
-
-    console.log("jobId: ", jobId);
-
-    if (jobId) {
-      formData.append('session_id', jobId);
-    }
-
-    // Pass base_language as dependency for agent runtime injection
-    if (user?.base_language) {
-      formData.append('dependencies', JSON.stringify({
-        base_language: user.base_language,
-        job_id: jobId || undefined,
-      }));
-      console.log("Passing base_language dependency:", user.base_language);
-    } else if (jobId) {
-      formData.append('dependencies', JSON.stringify({
-        job_id: jobId,
-      }));
-    }
-
-    const response = await axios.post(
-      `${BACKEND_URL}/teams/${AGENT_ID}/runs`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 180000, // 3 minutes for agent delegation
-      }
-    );
-
-    console.log("response: ", response)
-
-    return {
-      success: true,
-      content: response.data.content || response.data.response || '',
-      jobId: response.data.session_id || jobId,
-      metrics: response.data.metrics,
-      memberResponses: response.data.member_responses || [],
-    };
-  } catch (error) {
-    console.error('Agent API error:', error);
-    return {
-      success: false,
-      error: error.response?.data?.detail || error.message || 'Failed to communicate with agent',
-    };
-  }
-};
-
-/**
  * Create new AgentOS job session
  * @returns {Promise} Job session data
  */
@@ -158,15 +96,18 @@ export const listAgentJobs = async () => {
  * Send message with streaming response
  * @param {string} message - User message
  * @param {string} jobId - Optional AgentOS job ID (session_id)
- * @param {Function} onChunk - Callback for each stream chunk
+ * @param {Function} onChunk - Callback for each content chunk
+ * @param {Function} onEvent - Callback for streamed events
  * @param {object} user - User object with base_language
  * @returns {Promise} Final response
  */
-export const sendMessageToAgentStreaming = async (message, jobId, onChunk, user = null) => {
+export const sendMessageToAgentStreaming = async (message, jobId, onChunk, onEvent, user = null) => {
   try {
     const formData = new FormData();
     formData.append('message', message);
     formData.append('stream', 'true');
+    formData.append('stream_events', 'true');
+    formData.append('stream_member_events', 'true');
     formData.append('monitor', 'true');
     if (jobId) {
       formData.append('session_id', jobId);
@@ -209,6 +150,7 @@ export const sendMessageToAgentStreaming = async (message, jobId, onChunk, user 
     let fullContent = '';
     let finalJobId = jobId;
     let buffer = '';
+    let memberResponses = [];
 
     return new Promise((resolve, reject) => {
       const processStream = async () => {
@@ -234,22 +176,52 @@ export const sendMessageToAgentStreaming = async (message, jobId, onChunk, user 
                 try {
                   const data = JSON.parse(line.slice(6));
 
-                  if (data.content) {
-                    fullContent += data.content;
-                    onChunk(data.content);
-                  }
-
                   if (data.session_id) {
                     finalJobId = data.session_id;
                   }
 
-                  if (data.done || data.event === 'agent_response_complete') {
-                    resolve({
-                      success: true,
-                      content: fullContent,
-                      jobId: finalJobId,
-                    });
-                    return;
+                  if (data.event) {
+                    if (onEvent) onEvent(data);
+
+                    const isMemberEvent = !!data.agent_id && data.agent_id !== AGENT_ID;
+                    const isTeamEvent = !data.agent_id || data.agent_id === AGENT_ID;
+
+                    if (data.event === 'TeamRunContent' || data.event === 'TeamRunIntermediateContent') {
+                      if (data.content && isTeamEvent && !isMemberEvent) {
+                        fullContent += data.content;
+                        onChunk(data.content);
+                      }
+                    }
+
+                    if (data.event === 'TeamRunCompleted') {
+                      if (Array.isArray(data.member_responses)) {
+                        memberResponses = data.member_responses;
+                      }
+                      resolve({
+                        success: true,
+                        content: fullContent || (isTeamEvent ? data.content || '' : ''),
+                        jobId: finalJobId,
+                        memberResponses,
+                        metrics: data.metrics,
+                      });
+                      return;
+                    }
+                  } else {
+                    const isTeamEvent = !data.agent_id || data.agent_id === AGENT_ID;
+                    if (data.content && isTeamEvent) {
+                      fullContent += data.content;
+                      onChunk(data.content);
+                    }
+
+                    if (data.done || data.event === 'agent_response_complete') {
+                      resolve({
+                        success: true,
+                        content: fullContent,
+                        jobId: finalJobId,
+                        memberResponses,
+                      });
+                      return;
+                    }
                   }
                 } catch (parseError) {
                   console.error('Parse error:', parseError);
@@ -273,11 +245,115 @@ export const sendMessageToAgentStreaming = async (message, jobId, onChunk, user 
           success: true,
           content: fullContent,
           jobId: finalJobId,
+          memberResponses,
         });
-      }, 60000);
+      }, 180000);
     });
   } catch (error) {
     console.error('Streaming error:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to stream response',
+    };
+  }
+};
+
+/**
+ * Send message to a subagent with streaming response
+ * @param {string} agentId - Subagent ID
+ * @param {string} message - User message
+ * @param {string} sessionId - Optional session ID
+ * @param {Function} onChunk - Callback for each content chunk
+ * @returns {Promise} Final response
+ */
+export const sendMessageToSubagentStreaming = async (agentId, message, sessionId, onChunk) => {
+  try {
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('stream', 'true');
+    formData.append('monitor', 'true');
+    if (sessionId) {
+      formData.append('session_id', sessionId);
+    }
+
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${BACKEND_URL}/agents/${agentId}/runs`, {
+      method: 'POST',
+      headers: headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    let buffer = '';
+
+    return new Promise((resolve, reject) => {
+      const processStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              resolve({ success: true, content: fullContent });
+              break;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+
+                  if (data.event === 'RunContent' || data.event === 'RunIntermediateContent') {
+                    if (data.content) {
+                      fullContent += data.content;
+                      if (onChunk) onChunk(data.content);
+                    }
+                  } else if (data.content) {
+                    fullContent += data.content;
+                    if (onChunk) onChunk(data.content);
+                  }
+
+                  if (data.event === 'RunCompleted' || data.done) {
+                    resolve({ success: true, content: fullContent || data.content || '' });
+                    return;
+                  }
+                } catch (parseError) {
+                  console.error('Parse error:', parseError);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          reject({
+            success: false,
+            error: 'Streaming connection failed: ' + error.message,
+          });
+        }
+      };
+
+      processStream();
+
+      setTimeout(() => {
+        reader.cancel();
+        resolve({ success: true, content: fullContent });
+      }, 180000);
+    });
+  } catch (error) {
+    console.error('Subagent streaming error:', error);
     return {
       success: false,
       error: error.message || 'Failed to stream response',

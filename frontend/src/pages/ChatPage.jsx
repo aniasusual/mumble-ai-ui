@@ -1,100 +1,23 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import MeshGradientBackground from '../components/MeshGradientBackground';
 import MumbleLogo from '../components/MumbleLogo';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/ui/input';
-import {
-  ArrowLeft,
-  Send,
-  Mic,
-  Loader2,
-  Sparkles,
-  BookOpenText,
-  PenLine,
-  Headphones,
-  Speech,
-  CheckCircle2,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, Send, Mic, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { sendMessageToAgent } from '../services/agentService';
-import { ConversationAgentPanel, ConversationInviteCard } from '../components/subagents';
+import {
+  sendMessageToAgentStreaming,
+  sendMessageToSubagentStreaming,
+  getAgentJobHistory,
+} from '../services/agentService';
+import { RunActivityBox, SubagentInteractionPanel } from '../components/chat';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = `${BACKEND_URL}/api`
+const TEAM_AGENT_ID = 'mumble-ai-coach';
 
-const PRACTICE_MODULES = {
-  writing: {
-    name: 'Writing Lab',
-    type: 'writing',
-    focus: 'Structure and clarity',
-    icon: PenLine,
-  },
-  pronunciation: {
-    name: 'Pronunciation Studio',
-    type: 'pronunciation',
-    focus: 'Sounds, stress, rhythm',
-    icon: Headphones,
-  },
-  reading: {
-    name: 'Reading Flow',
-    type: 'reading',
-    focus: 'Pacing and intonation',
-    icon: BookOpenText,
-  },
-  speaking: {
-    name: 'Speaking Sprint',
-    type: 'speaking',
-    focus: 'Fluency and confidence',
-    icon: Speech,
-  },
-  vocabulary: {
-    name: 'Vocabulary Boost',
-    type: 'vocabulary',
-    focus: 'New words in context',
-    icon: Sparkles,
-  },
-  grammar: {
-    name: 'Grammar Focus',
-    type: 'grammar',
-    focus: 'Accuracy and corrections',
-    icon: CheckCircle2,
-  },
-};
-
-const detectPracticeModule = (text) => {
-  if (!text) return null;
-  const lowered = text.toLowerCase();
-  if (lowered.includes('pronunciation') || lowered.includes('pronounce')) return 'pronunciation';
-  if (lowered.includes('writing') || lowered.includes('write')) return 'writing';
-  if (lowered.includes('reading') || lowered.includes('read')) return 'reading';
-  if (lowered.includes('vocabulary') || lowered.includes('vocab') || lowered.includes('word')) return 'vocabulary';
-  if (lowered.includes('grammar')) return 'grammar';
-  return null;
-};
-
-// Detect if main agent wants to start conversation practice
-const detectConversationInvite = (text) => {
-  if (!text) return null;
-  const lowered = text.toLowerCase();
-  // Look for conversation practice triggers
-  if (
-    (lowered.includes('conversation') && (lowered.includes('practice') || lowered.includes('let\'s'))) ||
-    (lowered.includes('speaking') && lowered.includes('practice')) ||
-    lowered.includes('free conversation') ||
-    lowered.includes('let\'s talk') ||
-    lowered.includes('start a conversation') ||
-    lowered.includes('practice speaking')
-  ) {
-    return {
-      topic: 'Free conversation practice',
-      description: 'Practice natural conversation with real-time voice interaction',
-    };
-  }
-  return null;
-};
 
 const ChatPage = () => {
   const { jobId } = useParams();
@@ -106,7 +29,7 @@ const ChatPage = () => {
   const [isLoadingJob, setIsLoadingJob] = useState(true);
 
   // Chat states
-  const [messages, setMessages] = useState([]);
+  const [chatItems, setChatItems] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
   const [agentJobId, setAgentJobId] = useState(null);
@@ -117,19 +40,37 @@ const ChatPage = () => {
   // Voice input states
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [expandedRunEvents, setExpandedRunEvents] = useState({});
+  const [activeSubagent, setActiveSubagent] = useState(null);
+  const [subagentSessions, setSubagentSessions] = useState({});
+  const [isSubagentSending, setIsSubagentSending] = useState(false);
 
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const introCalledRef = useRef(false);
   const chatEndRef = useRef(null);
+  const chatItemsRef = useRef([]);
 
-  const [activeModule, setActiveModule] = useState(null);
-  
-  // Conversation agent state
-  const [isConversationPanelOpen, setIsConversationPanelOpen] = useState(false);
-  const [conversationContext, setConversationContext] = useState({});
+  const isTeamAssistantMessage = useCallback((message) => {
+    if (!message) return false;
+    if (message.role && message.role !== 'assistant') return true;
+    if (message.type && message.type !== 'assistant') return true;
+    const agentId = message.agent_id || message.agentId;
+    const agentName = (message.agent_name || message.agentName || '').toLowerCase();
+    if (agentId && agentId !== TEAM_AGENT_ID) return false;
+    if (agentName && agentName.includes('planning') && agentId !== TEAM_AGENT_ID) return false;
+    return true;
+  }, []);
 
   // Fetch job data
+  const setChatItemsState = useCallback((updater) => {
+    setChatItems((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      chatItemsRef.current = next;
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
     const fetchJob = async () => {
       try {
@@ -140,8 +81,67 @@ const ChatPage = () => {
         setAgentJobId(response.data.agent_job_id || jobId);
 
         // Load existing chat history if available
-        if (response.data.chat_history) {
-          setMessages(response.data.chat_history);
+        if (Array.isArray(response.data.chat_history) && response.data.chat_history.length > 0) {
+          const history = response.data.chat_history;
+          const hasTypedEntries = history.some((item) => item?.type);
+          if (hasTypedEntries) {
+            const normalized = history.map((item) => {
+              if (item?.type !== 'run') return item;
+              const hasCompletedEvent = Array.isArray(item.events)
+                ? item.events.some((event) => event?.event === 'TeamRunCompleted')
+                : false;
+              const toolsDone = Array.isArray(item.tools)
+                ? item.tools.every((tool) => tool.status === 'completed')
+                : true;
+              const agentsDone = Array.isArray(item.agents)
+                ? item.agents.every((agent) => agent.status === 'completed')
+                : true;
+              const nextStatus = hasCompletedEvent || (toolsDone && agentsDone)
+                ? 'completed'
+                : item.status || 'running';
+              return { ...item, status: nextStatus };
+            });
+            const filtered = normalized.filter((item) => {
+              if (!item) return false;
+              if (item.type !== 'assistant') return true;
+              return isTeamAssistantMessage(item);
+            });
+            setChatItemsState(filtered);
+          } else {
+            const restoredItems = history
+              .filter((item) => item?.role === 'user' || item?.role === 'assistant')
+              .filter((item) => isTeamAssistantMessage(item))
+              .map((item) => ({
+                type: item.role,
+                content: item.content || '',
+                agent_id: item.agent_id,
+                agent_name: item.agent_name,
+              }))
+              .filter((item) => item.content);
+            setChatItemsState(restoredItems);
+          }
+        } else {
+          const agentSessionId = response.data.agent_job_id || jobId;
+          if (agentSessionId) {
+            const historyResponse = await getAgentJobHistory(agentSessionId);
+            if (historyResponse?.success && Array.isArray(historyResponse.messages)) {
+              const restoredItems = historyResponse.messages
+                .filter((message) => message?.role === 'user' || message?.role === 'assistant')
+                .filter((message) => isTeamAssistantMessage(message))
+                .map((message) => ({
+                  type: message.role,
+                  content: message.content || '',
+                  agent_id: message.agent_id,
+                  agent_name: message.agent_name,
+                }))
+                .filter((item) => item.content);
+
+              if (restoredItems.length > 0) {
+                setChatItemsState(restoredItems);
+                await axios.put(`${API}/jobs/${jobId}`, { chat_history: restoredItems });
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch job:', error);
@@ -153,13 +153,13 @@ const ChatPage = () => {
     };
 
     fetchJob();
-  }, [jobId, navigate]);
+  }, [jobId, navigate, setChatItemsState]);
 
   // Save chat history to job
-  const saveChatHistory = useCallback(async (newMessages, agentIdOverride = null) => {
+  const saveChatHistory = useCallback(async (_unused, agentIdOverride = null) => {
     try {
       const updateData = {
-        chat_history: newMessages,
+        chat_history: chatItemsRef.current,
       };
 
       // Save AgentOS job ID if provided
@@ -172,6 +172,73 @@ const ChatPage = () => {
       console.error('Failed to save chat history:', error);
     }
   }, [jobId]);
+
+  const getSubagentKey = useCallback((agent) => {
+    if (!agent) return null;
+    return agent.agent_id || agent.agent_name || agent.id;
+  }, []);
+
+  const updateSubagentSession = useCallback((agentKey, updater) => {
+    if (!agentKey) return;
+    setSubagentSessions((prev) => {
+      const current = prev[agentKey] || [];
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      return { ...prev, [agentKey]: next };
+    });
+  }, []);
+
+  const handleSelectSubagent = useCallback((agent) => {
+    const agentKey = getSubagentKey(agent);
+    if (!agentKey) return;
+    setActiveSubagent(agent);
+    updateSubagentSession(agentKey, (current) => {
+      if (current.length > 0 || !agent?.content) return current;
+      return [{ role: 'assistant', content: agent.content }];
+    });
+  }, [getSubagentKey, updateSubagentSession]);
+
+  const handleSendToSubagent = useCallback(async (message) => {
+    if (!activeSubagent?.agent_id) {
+      toast.error('This subagent is not available for direct chat yet.');
+      return;
+    }
+
+    const agentKey = getSubagentKey(activeSubagent);
+    if (!agentKey) return;
+
+    setIsSubagentSending(true);
+    let assistantIndex = -1;
+
+    updateSubagentSession(agentKey, (current) => {
+      const next = [
+        ...current,
+        { role: 'user', content: message },
+        { role: 'assistant', content: '' },
+      ];
+      assistantIndex = next.length - 1;
+      return next;
+    });
+
+    const onChunk = (chunk) => {
+      if (!chunk) return;
+      updateSubagentSession(agentKey, (current) => {
+        if (assistantIndex < 0 || assistantIndex >= current.length) return current;
+        const next = [...current];
+        const target = next[assistantIndex];
+        next[assistantIndex] = { ...target, content: `${target.content || ''}${chunk}` };
+        return next;
+      });
+    };
+
+    try {
+      await sendMessageToSubagentStreaming(activeSubagent.agent_id, message, null, onChunk);
+    } catch (error) {
+      console.error('Subagent streaming error:', error);
+      toast.error('Failed to reach subagent.');
+    } finally {
+      setIsSubagentSending(false);
+    }
+  }, [activeSubagent, getSubagentKey, updateSubagentSession]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -222,20 +289,180 @@ const ChatPage = () => {
   const sendMessage = useCallback(async (message, isIntro = false) => {
     if (!message.trim() || isChatting) return;
 
-    let updatedMessages = [...messages];
+    let updatedItems = [...chatItemsRef.current];
 
     // Add user message to chat
     if (!isIntro) {
-      updatedMessages = [...messages, { role: 'user', content: message }];
-      setMessages(updatedMessages);
+      updatedItems = [
+        ...updatedItems,
+        { type: 'user', content: message },
+      ];
+      setChatItemsState(updatedItems);
       setChatInput('');
     }
+
+    const runItemId = `run-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const runItem = {
+      type: 'run',
+      id: runItemId,
+      status: 'running',
+      tools: [],
+      agents: [],
+      events: [],
+    };
+    updatedItems = [
+      ...updatedItems,
+      runItem,
+      { type: 'assistant', content: '' },
+    ];
+    setChatItemsState(updatedItems);
+    const assistantIndexRef = { current: updatedItems.length - 1 };
 
     setIsChatting(true);
 
     try {
+      const toolIndexByKey = new Map();
+      const agentIndexByKey = new Map();
+
+      const updateRunItem = (update) => {
+        setChatItemsState((prev) =>
+          prev.map((item) => {
+            if (item.type !== 'run' || item.id !== runItemId) return item;
+            return update(item);
+          })
+        );
+      };
+
+      const handleStreamEvent = (data) => {
+        if (!data?.event) return;
+        const summarizedEvent = {
+          event: data.event,
+          created_at: data.created_at,
+          run_id: data.run_id,
+          parent_run_id: data.parent_run_id,
+          session_id: data.session_id,
+          agent_id: data.agent_id,
+          agent_name: data.agent_name,
+          team_id: data.team_id,
+          team_name: data.team_name,
+          tool: data.tool ? { tool_name: data.tool.tool_name || data.tool.name } : undefined,
+          content: data.content,
+        };
+        updateRunItem((runItem) => ({
+          ...runItem,
+          events: [...runItem.events, summarizedEvent],
+        }));
+
+        if (data.event === 'TeamRunContent' || data.event === 'TeamRunIntermediateContent') {
+          const chunk = data.content || '';
+          if (!chunk) return;
+          const isMemberResponse =
+            (data.team_id && data.agent_id && data.agent_id !== data.team_id) ||
+            (data.agent_id && data.agent_id !== 'mumble-ai-coach');
+          if (isMemberResponse) return;
+          setChatItemsState((prev) => {
+            if (assistantIndexRef.current === null || !prev[assistantIndexRef.current]) return prev;
+            const next = [...prev];
+            const current = next[assistantIndexRef.current];
+            const nextContent = (current.content || '') + chunk;
+            next[assistantIndexRef.current] = { ...current, content: nextContent };
+            return next;
+          });
+          return;
+        }
+
+      if (data.event === 'TeamToolCallStarted' || data.event === 'ToolCallStarted') {
+        const toolName = data.tool?.tool_name || data.tool?.name || data.tool_name;
+          const key = `${data.run_id || data.created_at || ''}:${toolName || ''}`;
+          if (!toolIndexByKey.has(key)) {
+            toolIndexByKey.set(key, key);
+            updateRunItem((runItem) => ({
+              ...runItem,
+              tools: [
+                ...runItem.tools,
+                {
+                  id: key,
+                  status: 'running',
+                  tool_name: toolName,
+                  agent_name: data.agent_name || data.team_name,
+                },
+              ],
+            }));
+          }
+          return;
+        }
+
+        if (data.event === 'TeamToolCallCompleted' || data.event === 'ToolCallCompleted') {
+        const toolName = data.tool?.tool_name || data.tool?.name || data.tool_name;
+          const key = `${data.run_id || data.created_at || ''}:${toolName || ''}`;
+          updateRunItem((runItem) => ({
+            ...runItem,
+            tools: runItem.tools.map((tool) =>
+              tool.id === key ? { ...tool, status: 'completed', tool_name: toolName } : tool
+            ),
+          }));
+          return;
+        }
+
+        if (data.event === 'RunStarted') {
+          const agentKey = data.run_id || data.agent_id || data.agent_name;
+          if (!agentKey) return;
+          if (!agentIndexByKey.has(agentKey)) {
+            agentIndexByKey.set(agentKey, agentKey);
+            updateRunItem((runItem) => ({
+              ...runItem,
+              agents: [
+                ...runItem.agents,
+                {
+                  id: agentKey,
+                  status: 'running',
+                  agent_name: data.agent_name,
+                  agent_id: data.agent_id,
+                },
+              ],
+            }));
+          }
+          return;
+        }
+
+        if (data.event === 'RunCompleted') {
+          const agentKey = data.run_id || data.agent_id || data.agent_name;
+          const content = data.content || '';
+          if (!agentKey) return;
+          updateRunItem((runItem) => ({
+            ...runItem,
+            agents: runItem.agents.map((agent) =>
+              agent.id === agentKey ? { ...agent, status: 'completed', content } : agent
+            ),
+          }));
+          return;
+        }
+
+        if (data.event === 'TeamRunStarted') {
+          updateRunItem((runItem) => ({
+            ...runItem,
+            status: 'running',
+            run_id: data.run_id,
+          }));
+        }
+
+        if (data.event === 'TeamRunCompleted') {
+          updateRunItem((runItem) => ({
+            ...runItem,
+            status: 'completed',
+            run_id: data.run_id || runItem.run_id,
+          }));
+        }
+      };
+
       // Call Main Agent through AgentOS with user context for base_language
-      const result = await sendMessageToAgent(message, agentJobId || jobId, user);
+      const result = await sendMessageToAgentStreaming(
+        message,
+        agentJobId || jobId,
+        () => {},
+        handleStreamEvent,
+        user
+      );
 
       if (!result.success) {
         throw new Error(result.error);
@@ -248,34 +475,56 @@ const ChatPage = () => {
         setAgentJobId(result.jobId);
       }
 
-      let allNewMessages = [...updatedMessages];
-
-      // Add subagent responses if any (before main agent response)
-      if (result.memberResponses && result.memberResponses.length > 0) {
-        for (const memberResponse of result.memberResponses) {
-          allNewMessages.push({
-            role: 'assistant',
-            content: memberResponse.content,
-            agentName: memberResponse.agent_name || 'Agent',
-            agentId: memberResponse.agent_id,
-            isSubagent: true,
-          });
-        }
+      if (result.content) {
+        setChatItemsState((prev) => {
+          if (assistantIndexRef.current === null || !prev[assistantIndexRef.current]) {
+            return [...prev, { type: 'assistant', content: result.content }];
+          }
+          const next = [...prev];
+          next[assistantIndexRef.current] = { ...next[assistantIndexRef.current], content: result.content };
+          return next;
+        });
       }
 
-      // Add Main Agent response
-      allNewMessages.push({
-        role: 'assistant',
-        content: result.content,
-        agentName: 'Main Coach',
-        isSubagent: false,
-      });
-
-      setMessages(allNewMessages);
+      // Backfill run activity subagents from member_responses so subagent box and content are available
+      if (Array.isArray(result.memberResponses) && result.memberResponses.length > 0) {
+        setChatItemsState((prev) =>
+          prev.map((item) => {
+            if (item.type !== 'run' || item.id !== runItemId) return item;
+            const fromMembers = result.memberResponses.map((mr, idx) => {
+              const agentId = mr.agent_id ?? mr.id ?? `member-${idx}`;
+              const agentName = mr.agent_name ?? mr.name ?? 'Subagent';
+              let content = mr.content;
+              if (content == null && Array.isArray(mr.messages)) {
+                const assistantMessages = mr.messages.filter((m) => m.role === 'assistant');
+                content = assistantMessages.map((m) => m.content ?? '').join('\n').trim() || '';
+              }
+              if (content == null) content = '';
+              return {
+                id: agentId,
+                agent_id: agentId,
+                agent_name: agentName,
+                status: 'completed',
+                content: String(content),
+              };
+            });
+            const merged = [...(item.agents || [])];
+            fromMembers.forEach((agent) => {
+              const existing = merged.find((a) => a.id === agent.id || a.agent_id === agent.agent_id);
+              if (!existing) {
+                merged.push(agent);
+              } else if (!existing.content && agent.content) {
+                const i = merged.indexOf(existing);
+                merged[i] = { ...existing, content: agent.content, status: 'completed' };
+              }
+            });
+            return { ...item, agents: merged };
+          })
+        );
+      }
 
       // Save to backend job storage (include agent job ID if it was just set)
-      saveChatHistory(allNewMessages, !agentJobId && newAgentJobId ? newAgentJobId : null);
-
+      saveChatHistory(null, !agentJobId && newAgentJobId ? newAgentJobId : null);
     } catch (error) {
       console.error('Chat error:', error);
       if (!isIntro) {
@@ -284,7 +533,7 @@ const ChatPage = () => {
     } finally {
       setIsChatting(false);
     }
-  }, [isChatting, agentJobId, jobId, messages, saveChatHistory, user]);
+  }, [isChatting, agentJobId, jobId, saveChatHistory, setChatItemsState, user]);
 
   // Trigger intro message when job loads (only for new jobs)
   useEffect(() => {
@@ -307,7 +556,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (!chatEndRef.current) return;
     chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isChatting]);
+  }, [chatItems, isChatting]);
 
   // Toggle voice input
   const toggleListening = () => {
@@ -352,165 +601,8 @@ const ChatPage = () => {
     }
   };
 
-  const renderPracticeModule = (module) => {
-    if (!module) return null;
-
-    switch (module.type) {
-      case 'writing':
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Writing prompt</p>
-              <p className="mt-2 text-white/90">Describe a memorable meal you had recently. Focus on details and sequence.</p>
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <textarea
-                  rows={6}
-                  placeholder="Write your response here..."
-                  className="w-full bg-transparent text-white/90 placeholder:text-white/30 focus:outline-none"
-                />
-              </div>
-              <div className="mt-4 flex items-center gap-3">
-                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
-                  Submit writing
-                </button>
-                <span className="text-xs text-white/40">You can edit before submitting.</span>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach checklist</p>
-              <ul className="mt-3 space-y-2 text-sm text-white/70">
-                <li>Clear beginning, middle, end.</li>
-                <li>At least 3 descriptive adjectives.</li>
-                <li>Use past tense consistently.</li>
-              </ul>
-            </div>
-          </div>
-        );
-      case 'pronunciation':
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Target phrase</p>
-              <p className="mt-2 text-white text-lg">"Could you repeat that more slowly?"</p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
-                  Record attempt
-                </button>
-                <button className="px-4 py-2 rounded-full text-sm text-white/60 border border-white/10 bg-white/5">
-                  Hear model
-                </button>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Feedback focus</p>
-              <ul className="mt-3 space-y-2 text-sm text-white/70">
-                <li>Stress on "repeat" and "slowly".</li>
-                <li>Link "repeat that" smoothly.</li>
-                <li>Soften the "t" in "that".</li>
-              </ul>
-            </div>
-          </div>
-        );
-      case 'reading':
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Reading passage</p>
-              <p className="mt-2 text-white/90">"When the train finally arrived, the platform had gone quiet. Everyone leaned forward, eager to see where it would take them."</p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
-                  Start reading
-                </button>
-                <button className="px-4 py-2 rounded-full text-sm text-white/60 border border-white/10 bg-white/5">
-                  Hear coach read
-                </button>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Reading goals</p>
-              <ul className="mt-3 space-y-2 text-sm text-white/70">
-                <li>Pause briefly after commas.</li>
-                <li>Lift intonation on "eager".</li>
-                <li>Keep a steady pace.</li>
-              </ul>
-            </div>
-          </div>
-        );
-      case 'speaking':
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Speaking prompt</p>
-              <p className="mt-2 text-white/90">Explain your weekend plans in under one minute. Include one detail about time and location.</p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
-                  Begin speaking
-                </button>
-                <button className="px-4 py-2 rounded-full text-sm text-white/60 border border-white/10 bg-white/5">
-                  Practice outline
-                </button>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach notes</p>
-              <p className="mt-2 text-white/70 text-sm">Aim for 3-4 sentences. Focus on smooth linking words.</p>
-            </div>
-          </div>
-        );
-      case 'vocabulary':
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">New words</p>
-              <div className="mt-3 grid gap-3">
-                {['negotiate', 'improvise', 'persuade'].map((word) => (
-                  <div key={word} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                    <p className="text-white font-medium">{word}</p>
-                    <p className="text-white/60 text-sm">Use it in a sentence about today.</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Your sentence</p>
-              <input
-                className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/90 placeholder:text-white/30 focus:outline-none"
-                placeholder="Type one sentence using a new word..."
-              />
-            </div>
-          </div>
-        );
-      case 'grammar':
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Fix the sentence</p>
-              <p className="mt-2 text-white/90">"I am agree with you because it make sense."</p>
-              <input
-                className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/90 placeholder:text-white/30 focus:outline-none"
-                placeholder="Rewrite it correctly..."
-              />
-              <div className="mt-4">
-                <button className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10">
-                  Check answer
-                </button>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Coach hint</p>
-              <p className="mt-2 text-white/70 text-sm">Drop "am" before adjectives like "agree".</p>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const activeModuleMeta = useMemo(() => {
-    if (!activeModule) return null;
-    return PRACTICE_MODULES[activeModule] || null;
-  }, [activeModule]);
+  const activeSubagentKey = getSubagentKey(activeSubagent);
+  const activeSubagentMessages = activeSubagentKey ? subagentSessions[activeSubagentKey] : [];
 
   if (isLoadingJob) {
     return (
@@ -550,128 +642,49 @@ const ChatPage = () => {
         <main className="flex-1 px-6 pt-24 pb-6 overflow-hidden">
           <div className="max-w-5xl mx-auto flex flex-col gap-6 h-full">
             <div className="space-y-4 overflow-y-auto pr-1 min-h-0 flex-1">
-              {messages.length === 0 && !isChatting && (
-                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-6 text-white/50">
-                    Your coach will guide you step-by-step and open practice modules as needed.
-                  </div>
-                )}
-
-                {messages.map((msg, idx) => {
-                  const practiceType = msg.role === 'assistant' && !msg.isSubagent
-                    ? detectPracticeModule(msg.content)
-                    : null;
-                  const moduleMeta = practiceType ? PRACTICE_MODULES[practiceType] : null;
-                  const ModuleIcon = moduleMeta?.icon || Sparkles;
-                  
-                  // Check for conversation practice invite
-                  const conversationInvite = msg.role === 'assistant' && !msg.isSubagent
-                    ? detectConversationInvite(msg.content)
-                    : null;
-
-                  if (msg.role === 'user') {
+                {chatItems.map((item, idx) => {
+                  if (item.type === 'user') {
                     return (
                       <div key={idx} className="flex justify-end">
                         <div className="max-w-[80%] rounded-2xl bg-[#1e3a5f] px-4 py-3 text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
-                          <p className="text-sm uppercase tracking-[0.2em] text-[#60a5fa]">You</p>
-                          <p className="mt-2 text-base leading-relaxed text-white">{msg.content}</p>
+                          <p className="text-base leading-relaxed text-white">{item.content}</p>
                         </div>
                       </div>
                     );
                   }
 
-                  if (msg.role === 'tool') {
-                    return (
-                      <div key={idx} className="flex justify-center">
-                        <div className="w-full rounded-2xl bg-[#1f2937] px-4 py-3">
-                          <p className="text-xs uppercase tracking-[0.2em] text-[#9ca3af]">Coach tool</p>
-                          <p className="mt-2 text-sm text-[#d1d5db]">{msg.content}</p>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  if (msg.isSubagent) {
+                  if (item.type === 'assistant') {
                     return (
                       <div key={idx} className="flex justify-start">
-                        <div className="w-full rounded-2xl bg-[#831843] px-4 py-4 text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
-                          <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.25em] text-[#f9a8d4]">Specialist feedback</p>
-                              <p className="text-lg font-semibold text-white mt-1">{msg.agentName || 'Specialist'}</p>
-                            </div>
-                          </div>
-                          <p className="mt-3 text-sm leading-relaxed text-[#fce7f3]">{msg.content}</p>
+                        <div className="w-full px-1 py-2">
+                          <p className="text-base leading-relaxed text-white/90">{item.content}</p>
                         </div>
                       </div>
                     );
                   }
 
-                  return (
-                    <div key={idx} className="space-y-3">
-                      <div className="flex justify-start">
-                        <div className="w-full px-1 py-2">
-                          <p className="text-base leading-relaxed text-white/90">{msg.content}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Conversation Practice Invite */}
-                      {conversationInvite && (
-                        <ConversationInviteCard
-                          topic={conversationInvite.topic}
-                          description={conversationInvite.description}
-                          targetLanguage={user?.target_language}
-                          level={user?.level}
-                          onClick={() => {
-                            setConversationContext({
-                              topic: conversationInvite.topic,
-                              targetLanguage: user?.target_language,
-                              level: user?.level,
-                            });
-                            setIsConversationPanelOpen(true);
-                          }}
+                  if (item.type === 'run') {
+                    const isExpanded = !!expandedRunEvents[item.id];
+                    return (
+                      <div key={idx} className="flex justify-start">
+                        <RunActivityBox
+                          runItem={item}
+                          isExpanded={isExpanded}
+                          onToggle={() =>
+                            setExpandedRunEvents((prev) => ({
+                              ...prev,
+                              [item.id]: !prev[item.id],
+                            }))
+                          }
+                          onSelectSubagent={handleSelectSubagent}
                         />
-                      )}
-                      
-                      {/* Other practice modules */}
-                      {moduleMeta && !conversationInvite && (
-                        <div className="flex justify-start">
-                          <div className="w-full rounded-2xl border border-white/10 bg-[#161b22] px-4 py-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex items-start gap-3">
-                                <div className="h-10 w-10 rounded-2xl border border-white/10 bg-black/30 flex items-center justify-center text-white/70">
-                                  <ModuleIcon size={18} />
-                                </div>
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.2em] text-white/40">Practice module</p>
-                                  <p className="text-lg font-semibold text-white mt-1">{moduleMeta.name}</p>
-                                  <p className="text-xs text-white/50 mt-1">{moduleMeta.focus}</p>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => setActiveModule(moduleMeta.type)}
-                                className="px-4 py-2 rounded-full text-sm text-[#8FEC78] border border-[#8FEC78]/40 bg-[#8FEC78]/10 hover:bg-[#8FEC78]/20 transition"
-                              >
-                                Open practice
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
+                      </div>
+                    );
+                  }
+
+                  return null;
                 })}
 
-                {isChatting && (
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
                 <div ref={chatEndRef} />
             </div>
 
@@ -767,63 +780,18 @@ const ChatPage = () => {
                 </div>
               </form>
             </div>
+
+            <SubagentInteractionPanel
+              isOpen={!!activeSubagent}
+              agent={activeSubagent}
+              messages={activeSubagentMessages}
+              onClose={() => setActiveSubagent(null)}
+              onSend={handleSendToSubagent}
+              isSending={isSubagentSending}
+            />
           </div>
         </main>
 
-        {activeModuleMeta && (
-          <div className="fixed inset-0 z-[60] flex items-start justify-center px-6 py-16">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setActiveModule(null)}
-            />
-            <div className="relative w-full max-w-4xl rounded-[32px] border border-white/10 bg-[#0b0b0b]/80 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
-              <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-[#8FEC78]/80">Practice module</p>
-                  <h3 className="text-2xl font-semibold text-white mt-2">{activeModuleMeta.name}</h3>
-                  <p className="text-sm text-white/60 mt-1">{activeModuleMeta.focus}</p>
-                </div>
-                <button
-                  onClick={() => setActiveModule(null)}
-                  className="h-10 w-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/60 hover:text-white"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="p-6 grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
-                <div>
-                  {renderPracticeModule(activeModuleMeta)}
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">Coach intent</p>
-                    <p className="mt-2 text-white/80 text-sm">This module appears when your tutor decides it is the right next step.</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm text-white/70">After you finish</p>
-                    <div className="mt-3 space-y-2 text-sm text-white/80">
-                      <p>We will highlight your strengths.</p>
-                      <p>We will track what to revisit later.</p>
-                      <p>The main coach resumes the conversation.</p>
-                    </div>
-                  </div>
-                  <button className="w-full px-4 py-3 rounded-2xl bg-[#8FEC78]/15 border border-[#8FEC78]/30 text-[#8FEC78] text-sm">
-                    Mark as complete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Conversation Agent Panel */}
-        <ConversationAgentPanel
-          isOpen={isConversationPanelOpen}
-          onClose={() => setIsConversationPanelOpen(false)}
-          jobId={agentJobId || jobId}
-          user={user}
-          context={conversationContext}
-        />
       </div>
     </MeshGradientBackground>
   );
