@@ -51,7 +51,7 @@ const SubagentInteractionPanel = ({
           <div className="flex-1" />
           <div className="pointer-events-auto">
             <motion.div
-              className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-3xl bg-[#0b0d12] shadow-[0_-20px_80px_rgba(0,0,0,0.6)]"
+              className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-3xl border border-white/10 bg-[#090b10] shadow-[0_-20px_80px_rgba(0,0,0,0.65)]"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
@@ -59,33 +59,43 @@ const SubagentInteractionPanel = ({
             >
               <div className="pointer-events-none absolute inset-0">
                 <div
-                  className="absolute w-[520px] h-[520px] rounded-full opacity-24 blur-[120px]"
+                  className="absolute w-[520px] h-[520px] rounded-full opacity-30 blur-[120px]"
                   style={{
                     background:
-                      'radial-gradient(circle, rgba(125, 211, 252, 0.55) 0%, rgba(125, 211, 252, 0.18) 45%, transparent 70%)',
+                      'radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.2) 45%, transparent 70%)',
                     top: '-25%',
                     right: '-15%',
                     animation: 'sheetMesh1 22s ease-in-out infinite',
                   }}
                 />
                 <div
-                  className="absolute w-[560px] h-[560px] rounded-full opacity-2 blur-[120px]"
+                  className="absolute w-[560px] h-[560px] rounded-full opacity-28 blur-[120px]"
                   style={{
                     background:
-                      'radial-gradient(circle, rgba(248, 180, 160, 0.5) 0%, rgba(248, 180, 160, 0.16) 45%, transparent 70%)',
+                      'radial-gradient(circle, rgba(56, 189, 248, 0.55) 0%, rgba(56, 189, 248, 0.18) 45%, transparent 70%)',
                     bottom: '-25%',
                     left: '-15%',
                     animation: 'sheetMesh2 26s ease-in-out infinite',
                   }}
                 />
                 <div
-                  className="absolute w-[420px] h-[420px] rounded-full opacity-18 blur-[110px]"
+                  className="absolute w-[420px] h-[420px] rounded-full opacity-22 blur-[110px]"
                   style={{
                     background:
-                      'radial-gradient(circle, rgba(94, 234, 212, 0.45) 0%, rgba(94, 234, 212, 0.15) 50%, transparent 70%)',
+                      'radial-gradient(circle, rgba(244, 114, 182, 0.5) 0%, rgba(244, 114, 182, 0.16) 50%, transparent 70%)',
                     top: '35%',
                     left: '30%',
                     animation: 'sheetMesh3 20s ease-in-out infinite',
+                  }}
+                />
+                <div
+                  className="absolute w-[380px] h-[380px] rounded-full opacity-20 blur-[110px]"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(45, 212, 191, 0.16) 50%, transparent 70%)',
+                    top: '15%',
+                    left: '-5%',
+                    animation: 'sheetMesh4 24s ease-in-out infinite',
                   }}
                 />
               </div>
@@ -106,6 +116,11 @@ const SubagentInteractionPanel = ({
                   40% { transform: translate(20px, -25px) scale(1.06); }
                   70% { transform: translate(-15px, 20px) scale(0.98); }
                 }
+                @keyframes sheetMesh4 {
+                  0%, 100% { transform: translate(0, 0) scale(1); }
+                  35% { transform: translate(25px, 15px) scale(1.05); }
+                  65% { transform: translate(-20px, -10px) scale(0.97); }
+                }
               `}</style>
               <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
                 <div className="flex items-center gap-3">
@@ -122,7 +137,7 @@ const SubagentInteractionPanel = ({
                 </button>
               </div>
 
-              <div className="max-h-[calc(100vh-14.5rem)] overflow-y-auto px-6 py-5 space-y-5 relative z-10">
+              <div className="max-h-[calc(100vh-15rem)] overflow-y-auto px-6 py-5 space-y-5 relative z-10">
                 {(messages || []).length === 0 && (
                   <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-white/60">
                     No messages yet. This subagent will stream responses here as soon as it starts running.
